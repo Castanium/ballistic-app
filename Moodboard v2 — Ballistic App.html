@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Moodboard v2 — Ballistic App — DA Dark Tactical</title>
+<style>
+  :root{
+    --bg:#0c0e11; --panel:#15181c; --panel2:#1b1f24; --line:#262b31;
+    --text:#e8eaed; --muted:#838c96;
+    --yellow:#ffd93d; --orange:#ff8c1a; --red:#e8381a; --deepred:#9c1f10;
+    font-family:'Segoe UI',Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);margin:0;padding:40px 24px 90px;
+       max-width:1120px;margin-inline:auto;}
+  h1{font-size:1.9rem;margin:0 0 4px;letter-spacing:.5px}
+  .sub{color:var(--muted);margin:0 0 8px;font-size:.95rem}
+  .tagbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:40px}
+  .pill{font-family:monospace;font-size:.7rem;color:var(--orange);
+        border:1px solid var(--line);padding:4px 10px;border-radius:20px}
+  h2{font-size:.95rem;text-transform:uppercase;letter-spacing:2px;color:var(--orange);
+     border-left:3px solid var(--orange);padding-left:10px;margin:50px 0 18px}
+  h3{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:0 0 10px}
+  section{margin-bottom:8px}
+  .note{font-size:.82rem;color:var(--muted);background:var(--panel2);
+        border-left:2px solid var(--orange);padding:10px 14px;border-radius:0 4px 4px 0;margin:14px 0}
+
+  /* Palette */
+  .palette{display:flex;gap:10px;flex-wrap:wrap}
+  .swatch{flex:1;min-width:120px;height:80px;border-radius:4px;position:relative;
+          display:flex;align-items:flex-end;padding:8px;font-size:.7rem;
+          font-family:monospace;color:#000;text-shadow:0 0 4px rgba(255,255,255,.3)}
+  .swatch.dark{color:var(--text);text-shadow:none}
+  .swatch span{background:rgba(0,0,0,.25);padding:2px 5px;border-radius:2px}
+  .token-list{font-family:monospace;font-size:.78rem;color:var(--muted);
+      background:var(--panel);border:1px solid var(--line);border-radius:4px;
+      padding:14px 16px;margin-top:12px;line-height:1.9}
+  .token-list b{color:var(--text)}
+
+  /* Typo */
+  .typo-row{display:flex;justify-content:space-between;align-items:baseline;
+             padding:14px 0;border-bottom:1px solid var(--line)}
+  .mono{font-family:'Consolas','Courier New',monospace}
+  .tag{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+
+  /* Soft card = HUD adouci : juste un coin coupe, discret */
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:4px;
+    clip-path:polygon(0 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%);
+    padding:16px 18px;
+  }
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  @media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
+
+  .data-row{display:flex;justify-content:space-between;font-family:monospace;font-size:.82rem;
+             padding:8px 0;border-bottom:1px dashed var(--line)}
+  .data-row b{color:var(--orange)}
+
+  /* Form elements */
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:.72rem;color:var(--muted);text-transform:uppercase;
+               letter-spacing:1px;margin-bottom:6px}
+  .field input,.field select{
+    width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    padding:9px 12px;border-radius:3px;font-family:monospace;font-size:.85rem;
+  }
+  .toggle-group{display:flex;border:1px solid var(--line);border-radius:3px;overflow:hidden;width:fit-content}
+  .toggle-opt{padding:7px 16px;font-family:monospace;font-size:.78rem;color:var(--muted);cursor:default}
+  .toggle-opt.active{background:var(--orange);color:#1a0b00;font-weight:700}
+
+  .btn-row{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}
+  .btn{
+    font-family:monospace;font-size:.78rem;letter-spacing:1px;padding:10px 18px;
+    background:linear-gradient(90deg,var(--orange),var(--red));color:#120500;font-weight:700;
+    border-radius:3px;border:none;
+  }
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text);border-radius:3px;}
+
+  /* Logo placeholder (sera remplace par le vrai fichier) */
+  .phoenix{
+    background:conic-gradient(from 200deg, var(--yellow), var(--orange), var(--red), var(--deepred), var(--orange), var(--yellow));
+    clip-path:polygon(50% 0%, 100% 35%, 80% 100%, 50% 75%, 20% 100%, 0% 35%);
+  }
+
+  /* Screen mockups */
+  .phone{width:260px;border:1px solid var(--line);border-radius:14px;overflow:hidden;
+         background:var(--bg);margin:0 auto}
+  .phone-bar{height:6px;background:var(--panel2)}
+  .phone-body{padding:22px 16px;min-height:380px;position:relative;display:flex;
+              flex-direction:column}
+  .screens-row{display:flex;gap:24px;flex-wrap:wrap;justify-content:center}
+
+  /* Splash screen */
+  .splash .phone-body{align-items:center;justify-content:center;
+     background:radial-gradient(ellipse at center,#1a1d22 0%,var(--bg) 75%)}
+  .splash .phoenix{width:64px;height:64px;margin-bottom:16px}
+  .splash .appname{font-weight:700;letter-spacing:4px;font-size:.8rem;color:var(--text)}
+  .splash .baseline{font-family:monospace;font-size:.6rem;color:var(--muted);margin-top:4px}
+  .reveal-note{font-size:.62rem;color:var(--orange);font-family:monospace;margin-top:14px;
+     border:1px dashed var(--orange);padding:4px 8px;border-radius:3px}
+
+  /* Nav/app screen with watermark */
+  .app-screen .phone-body{background:
+    radial-gradient(ellipse at 50% 30%, #1a1d22 0%, var(--bg) 70%)}
+  .app-screen .watermark{position:absolute;width:150px;height:150px;opacity:.07;
+     top:60px;left:50%;transform:translateX(-50%)}
+  .topbar{display:flex;justify-content:space-between;align-items:center;
+          font-family:monospace;font-size:.65rem;color:var(--muted);margin-bottom:18px;
+          position:relative;z-index:1}
+  .topbar .dot-icon{width:16px;height:16px;border-radius:50%;background:var(--panel2);
+     display:flex;align-items:center;justify-content:center}
+  .mini-field{position:relative;z-index:1;background:var(--panel);border:1px solid var(--line);
+     border-radius:3px;padding:8px 10px;margin-bottom:8px;font-family:monospace;font-size:.65rem;
+     display:flex;justify-content:space-between;color:var(--muted)}
+  .mini-field b{color:var(--text)}
+  .navbar{display:flex;justify-content:space-around;margin-top:auto;padding-top:16px;
+         border-top:1px solid var(--line);position:relative;z-index:1}
+  .navitem{font-size:.6rem;font-family:monospace;color:var(--muted);text-align:center}
+  .navitem.active{color:var(--orange)}
+  .navitem .ico{width:18px;height:18px;background:var(--panel2);border-radius:3px;margin:0 auto 4px}
+  .navitem.active .ico{background:var(--orange)}
+
+  footer{margin-top:70px;color:var(--muted);font-size:.78rem;text-align:center}
+</style>
+</head>
+<body>
+
+  <h1>Ballistic App — Moodboard v2</h1>
+  <p class="sub">Référence design à fournir à Claude Code lors de la génération</p>
+  <div class="tagbar">
+    <span class="pill">DARK</span><span class="pill">TACTIQUE ADOUCI</span>
+    <span class="pill">LOGO PHÉNIX RÉEL</span><span class="pill">PWA iOS/Android/PC</span>
+  </div>
+
+  <div class="note">
+    ⚠️ Le logo utilisé ici est un <b style="color:var(--text)">placeholder CSS</b> imitant la silhouette
+    du vrai logo. Lors de la génération réelle, remplacer par le fichier
+    <code>logo_propre_sans_bordure.jpg</code> fourni (export SVG/PNG détouré recommandé pour l'animation).
+  </div>
+
+  <h2>Tokens couleur</h2>
+  <div class="palette">
+    <div class="swatch dark" style="background:#0c0e11"><span>bg</span></div>
+    <div class="swatch dark" style="background:#15181c"><span>panel</span></div>
+    <div class="swatch dark" style="background:#1b1f24"><span>panel2</span></div>
+    <div class="swatch dark" style="background:#262b31"><span>line</span></div>
+    <div class="swatch" style="background:#ffd93d"><span>yellow</span></div>
+    <div class="swatch" style="background:#ff8c1a"><span>orange</span></div>
+    <div class="swatch dark" style="background:#e8381a"><span>red</span></div>
+    <div class="swatch dark" style="background:#9c1f10"><span>deepred</span></div>
+  </div>
+  <div class="token-list">
+    --bg:#0c0e11; <b>--panel:#15181c;</b> --panel2:#1b1f24; --line:#262b31;<br>
+    --text:#e8eaed; --muted:#838c96;<br>
+    --yellow:#ffd93d; --orange:#ff8c1a; --red:#e8381a; --deepred:#9c1f10;<br>
+    accent-gradient: linear-gradient(90deg, var(--yellow), var(--orange), var(--red));
+  </div>
+
+  <h2>Typographie</h2>
+  <div class="typo-row">
+    <div style="font-size:1.4rem">Titres & UI — Segoe UI / system-ui</div>
+    <div class="tag">clair, lisible terrain</div>
+  </div>
+  <div class="typo-row">
+    <div class="mono" style="font-size:1.4rem">DONNÉES — 0123.4 MOA</div>
+    <div class="tag">monospace, chiffres & mesures uniquement</div>
+  </div>
+
+  <h2>Niveau HUD — adouci (retour pris en compte)</h2>
+  <div class="note">
+    Pas de réticules ni coins multi-découpés partout. Un seul coin coupé, discret,
+    réservé aux cartes de résultat principal. Le reste de l'UI reste quasi plat/minimaliste.
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Carte résultat (coin coupé — usage limité)</h3>
+      <div class="data-row"><span>Distance</span><b>500 m</b></div>
+      <div class="data-row"><span>Vent</span><b>10 km/h ↘</b></div>
+      <div class="data-row"><span>Correction V</span><b>+2.4 MIL</b></div>
+      <div class="data-row"><span>Correction H</span><b>+0.6 MIL</b></div>
+    </div>
+    <div class="card" style="clip-path:none;border-radius:6px">
+      <h3>Carte standard (sans coin coupé)</h3>
+      <div class="field">
+        <label>Modèle de traînée</label>
+        <div class="toggle-group">
+          <div class="toggle-opt active">G1</div>
+          <div class="toggle-opt">G7</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Coefficient balistique</label>
+        <input value="0.243" readonly>
+      </div>
+    </div>
+  </div>
+
+  <h2>Boutons</h2>
+  <div class="btn-row">
+    <button class="btn">CALCULER</button>
+    <button class="btn ghost">CALIBRER</button>
+    <button class="btn ghost">PROFILS</button>
+  </div>
+
+  <h2>Écrans de référence</h2>
+  <div class="screens-row">
+
+    <div>
+      <h3 style="text-align:center">Splash — ouverture (option 2)</h3>
+      <div class="phone splash">
+        <div class="phone-bar"></div>
+        <div class="phone-body">
+          <div class="phoenix"></div>
+          <div class="appname">BALLISTIC</div>
+          <div class="baseline">G1 / G7 · TLD CALC</div>
+          <div class="reveal-note">anim: assemblage triangles, ~1.2s</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3 style="text-align:center">Écran calcul — navigation (option 3)</h3>
+      <div class="phone app-screen">
+        <div class="phone-bar"></div>
+        <div class="phone-body">
+          <div class="phoenix watermark"></div>
+          <div class="topbar">
+            <span>PROFIL · 308WIN</span>
+            <div class="dot-icon">⚙</div>
+          </div>
+          <div class="mini-field"><span>Distance</span><b>500 m</b></div>
+          <div class="mini-field"><span>Vent</span><b>10 km/h</b></div>
+          <div class="mini-field"><span>BC calibré</span><b>0.246 (G7)</b></div>
+          <div class="navbar">
+            <div class="navitem active"><div class="ico"></div>CALC</div>
+            <div class="navitem"><div class="ico"></div>RÉTICULE</div>
+            <div class="navitem"><div class="ico"></div>CALIBRAGE</div>
+            <div class="navitem"><div class="ico"></div>WATCH</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <h2>Résumé pour le prompt</h2>
+  <div class="grid3">
+    <div class="card" style="clip-path:none;border-radius:6px">
+      <h3>Logo</h3>
+      <p style="font-size:.82rem;color:var(--muted)">Fichier réel fourni. Version animée
+      (assemblage triangles) au splash. Watermark à faible opacité (~7%) en fond pendant
+      la navigation, jamais au premier plan.</p>
+    </div>
+    <div class="card" style="clip-path:none;border-radius:6px">
+      <h3>HUD</h3>
+      <p style="font-size:.82rem;color:var(--muted)">Minimal. Un seul coin coupé réservé
+      aux cartes de résultat clé. Pas de réticules décoratifs dans l'UI générale
+      (le réticule réel reste dans l'écran dédié simulation).</p>
+    </div>
+    <div class="card" style="clip-path:none;border-radius:6px">
+      <h3>Ambiance</h3>
+      <p style="font-size:.82rem;color:var(--muted)">Sombre, lisible en extérieur,
+      chiffres en monospace, accents chauds du logo utilisés avec parcimonie
+      (boutons, valeurs clés, accents de bordure).</p>
+    </div>
+  </div>
+
+  <footer>Moodboard v2 — prête à être jointe au prompt de génération</footer>
+
+</body>
+</html>

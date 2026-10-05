@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0e11">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ballistic">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Ballistic</title>
+<style>
+/* ===================== DA : tokens moodboard v2 ===================== */
+:root{
+  --bg:#0c0e11; --panel:#15181c; --panel2:#1b1f24; --line:#262b31;
+  --text:#e8eaed; --muted:#838c96; --dim:#5d656e;
+  --yellow:#ffd93d; --orange:#ff8c1a; --red:#e8381a; --deepred:#9c1f10;
+  --accent:linear-gradient(90deg,var(--yellow),var(--orange),var(--red));
+  --sans:'Segoe UI',system-ui,-apple-system,'Helvetica Neue',sans-serif;
+  --mono:ui-monospace,'SF Mono','Cascadia Mono',Consolas,Menlo,monospace;
+  --nav-h:62px; --r:3px; --gap:12px;
+  --sl:env(safe-area-inset-left,0px); --sr:env(safe-area-inset-right,0px);
+  --st:env(safe-area-inset-top,0px); --sb:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;background:var(--bg);-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 50% 18%,#1a1d22 0%,var(--bg) 62%) fixed;
+  color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.35;
+  -webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.mono,.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+[hidden]{display:none!important}
+
+.watermark{position:fixed;left:50%;top:44%;width:min(86vw,560px);transform:translate(-50%,-50%);
+  opacity:.07;pointer-events:none;z-index:0}
+
+/* ---------- barre haute ---------- */
+.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;
+  padding:calc(var(--st) + 8px) calc(var(--sr) + 14px) 8px calc(var(--sl) + 14px);
+  background:linear-gradient(var(--bg) 70%,rgba(12,14,17,0))}
+.topbar .mark{width:30px;height:auto;flex:none}
+.chip{display:flex;align-items:center;gap:8px;min-height:40px;padding:0 12px;flex:1;min-width:0;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);text-align:left}
+.chip .k{font:600 .62rem var(--mono);letter-spacing:.14em;color:var(--muted)}
+.chip b{font:600 .82rem var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.chip .bc-flag{margin-left:auto;font:600 .62rem var(--mono);color:var(--orange);white-space:nowrap}
+
+main{position:relative;z-index:1;max-width:1180px;margin:0 auto;
+  padding:4px calc(var(--sr) + 14px) calc(var(--nav-h) + var(--sb) + 20px) calc(var(--sl) + 14px)}
+.screen{display:none}
+.screen.active{display:block}
+
+/* ---------- navigation basse ---------- */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;display:grid;grid-template-columns:repeat(4,1fr);
+  padding:0 var(--sr) var(--sb) var(--sl);background:rgba(12,14,17,.94);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+.tabs button{position:relative;height:var(--nav-h);border:0;background:none;color:var(--muted);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  font:600 .64rem var(--mono);letter-spacing:.1em}
+.tabs svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6}
+.tabs button[aria-current="page"]{color:var(--orange)}
+.tabs button[aria-current="page"]::before{content:"";position:absolute;top:-1px;left:22%;right:22%;height:2px;background:var(--accent)}
+
+/* ---------- elements communs ---------- */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+.lbl{display:block;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin:0 0 6px}
+.field{min-width:0}
+.inp{display:flex;align-items:stretch;background:var(--panel2);border:1px solid var(--line);border-radius:var(--r);min-height:46px}
+.inp input,.inp select{flex:1;min-width:0;width:100%;background:none;border:0;padding:0 12px;
+  font:500 16px var(--mono);font-variant-numeric:tabular-nums;color:var(--text);outline:none;border-radius:var(--r)}
+.inp select{appearance:none;-webkit-appearance:none}
+.inp:focus-within{border-color:#4a525c}
+.inp .u{display:flex;align-items:center;padding:0 12px;border:0;border-left:1px solid var(--line);background:none;
+  font:600 .74rem var(--mono);color:var(--muted);white-space:nowrap}
+button.u{color:var(--orange)}
+.field.err .inp{border-color:var(--red)}
+.field .msg{display:block;font-size:.72rem;color:#ff6a4d;margin-top:5px;min-height:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+.seg{display:flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel2)}
+.seg button{flex:1;min-height:42px;padding:0 8px;border:0;background:none;color:var(--muted);
+  font:600 .74rem var(--mono);white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--orange);color:#1a0b00}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 18px;border:0;
+  border-radius:var(--r);background:linear-gradient(90deg,var(--orange),var(--red));color:#120500;
+  font:700 .8rem var(--mono);letter-spacing:.12em;text-transform:uppercase;width:100%}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.btn:active,.seg button:active,.step:active,.pad button:active{transform:translateY(1px)}
+.note{font-size:.76rem;color:var(--muted);line-height:1.45}
+details>summary{list-style:none;cursor:pointer}
+details>summary::-webkit-details-marker{display:none}
+.disclose{display:flex;align-items:center;gap:10px;min-height:50px;padding:0 14px}
+.disclose .t{font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.disclose .s{margin-left:auto;font:500 .76rem var(--mono);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.disclose::after{content:"";width:7px;height:7px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg);margin:-4px 2px 0 4px;transition:transform .15s}
+details[open]>.disclose::after{transform:rotate(225deg);margin-top:4px}
+.dbody{padding:4px 14px 14px;display:grid;gap:var(--gap)}
+
+/* Carte resultat : le SEUL coin coupe de l'UI */
+.result{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%);padding:14px 16px 16px}
+.result::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(var(--yellow),var(--orange),var(--red))}
+
+/* ---------- CALC ---------- */
+.calc{display:grid;gap:var(--gap)}
+.dist{padding:10px 12px 12px}
+.dist .row{display:flex;align-items:center;gap:8px}
+.step{flex:none;width:54px;height:58px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel2);
+  color:var(--text);font:400 1.5rem var(--mono);line-height:1}
+.dist .inp{flex:1;min-height:58px}
+.dist .inp input{font-size:1.9rem;font-weight:600;text-align:center;letter-spacing:.02em}
+.wind{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:12px}
+.wind-read{font:500 .74rem var(--mono);color:var(--muted);display:grid;gap:3px;margin-top:10px}
+.wind-read b{color:var(--text);font-weight:600}
+#windClock{width:144px;height:144px;touch-action:none;display:block}
+#windClock .ring{fill:var(--panel2);stroke:var(--line)}
+#windClock .hr{font:600 9px var(--mono);fill:var(--muted);text-anchor:middle;dominant-baseline:central}
+#windClock .hr.on{fill:#1a0b00}
+#windClock .hdot{fill:transparent}
+#windClock .hdot.on{fill:var(--orange)}
+#windClock .shot{stroke:var(--dim);stroke-width:1.2;stroke-dasharray:2 2}
+#windClock .arrow{stroke:var(--orange);stroke-width:2.2;fill:none;stroke-linecap:round}
+#windClock .shooter{fill:var(--text)}
+#windClock .tgt{fill:none;stroke:var(--muted);stroke-width:1}
+
+.sol-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sol-top .lbl{margin:0}
+.badge{font:600 .62rem var(--mono);letter-spacing:.08em;color:var(--yellow);border:1px solid #4d4220;padding:3px 7px;border-radius:2px}
+.prim{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-bottom:12px;border-bottom:1px dashed var(--line)}
+.prim span{display:block;font-size:.64rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.prim b{display:block;font:600 1.18rem var(--mono);font-variant-numeric:tabular-nums;margin-top:3px;white-space:nowrap}
+.prim small{font:500 .7rem var(--mono);color:var(--muted)}
+.corr{display:grid;gap:2px;padding:10px 0 12px}
+.crow{display:grid;grid-template-columns:1fr auto;align-items:end;gap:4px 10px;padding:8px 0}
+.crow+.crow{border-top:1px dashed var(--line)}
+.crow .name{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;grid-column:1/-1}
+.crow .val{font:700 2.3rem/1 var(--mono);font-variant-numeric:tabular-nums;color:var(--orange);letter-spacing:-.01em;white-space:nowrap}
+.crow .val i{font:600 .8rem var(--mono);font-style:normal;color:var(--orange);margin-left:6px;letter-spacing:.06em}
+.crow .alt{font:500 .78rem var(--mono);color:var(--muted);white-space:nowrap}
+.crow .clk{grid-column:2;grid-row:2/4;align-self:center;text-align:right;font:600 1.05rem var(--mono);white-space:nowrap}
+.crow .clk small{display:block;font:500 .66rem var(--mono);color:var(--muted);letter-spacing:.06em;margin-top:3px}
+.sec{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font:500 .72rem var(--mono);color:var(--muted)}
+.sec b{color:var(--text);font-weight:600}
+.warn{margin-top:10px;font-size:.76rem;color:var(--yellow)}
+.errbox{padding:6px 0 4px}
+.errbox b{display:block;font:700 .8rem var(--mono);letter-spacing:.1em;color:#ff6a4d;margin-bottom:6px}
+.errbox li{font-size:.84rem;color:var(--text);margin:3px 0}
+.errbox ul{margin:0;padding-left:18px}
+table.rt{width:100%;border-collapse:collapse;font:500 .76rem var(--mono);font-variant-numeric:tabular-nums}
+table.rt th{font:600 .6rem var(--mono);letter-spacing:.08em;color:var(--muted);text-align:right;padding:6px 4px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.rt td{text-align:right;padding:6px 4px;white-space:nowrap}
+table.rt th:first-child,table.rt td:first-child{text-align:left}
+table.rt tr.here td{color:var(--orange)}
+table.rt tbody tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + var(--sb) + 14px);transform:translateX(-50%);z-index:30;max-width:min(92vw,440px);
+  background:var(--panel2);border:1px solid var(--line);border-left:2px solid var(--orange);border-radius:var(--r);padding:11px 14px;font-size:.84rem}
+/* ---------- RETICULE ---------- */
+.ret{display:grid;gap:10px}
+.ret-strip{display:flex;justify-content:space-between;gap:8px;font:500 .74rem var(--mono);color:var(--muted);white-space:nowrap}
+.ret-strip b{color:var(--orange);font-weight:700}
+.ret-view{position:relative;width:100%;max-width:max(230px,calc(100dvh - 420px));aspect-ratio:1;margin:0 auto}
+#reticle{width:100%;height:100%;display:block}
+#reticle .field{fill:#0e1114;stroke:var(--line);vector-effect:non-scaling-stroke}
+#reticle .ln{stroke:#d9dce0;stroke-width:1.1;fill:none;vector-effect:non-scaling-stroke}
+#reticle .post{stroke:#d9dce0;stroke-width:5;vector-effect:non-scaling-stroke}
+#reticle .dot{fill:#d9dce0}
+#reticle .lab{fill:var(--muted);font-family:var(--mono);font-weight:600}
+#reticle .bdc-lab{fill:var(--yellow);font-family:var(--mono);font-weight:600}
+#reticle .path{stroke:var(--orange);stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke;opacity:.7}
+#reticle .imp-halo{fill:none;stroke:#0c0e11;stroke-width:5;vector-effect:non-scaling-stroke}
+#reticle .imp{fill:var(--red);stroke:var(--yellow);stroke-width:1.6;vector-effect:non-scaling-stroke}
+#reticle .oov{fill:var(--orange)}
+.ret-oov{position:absolute;left:50%;top:10px;transform:translateX(-50%);font:700 .66rem var(--mono);letter-spacing:.1em;
+  color:#1a0b00;background:var(--orange);padding:4px 8px;border-radius:2px;white-space:nowrap}
+.ret-side{display:grid;gap:10px;align-content:start;min-width:0}
+.ret-ctl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:stretch}
+.pad{display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,54px);gap:4px}
+.pad button{border:1px solid var(--line);border-radius:var(--r);background:var(--panel2);color:var(--text);font:600 1.15rem var(--mono)}
+.pad .c{display:flex;align-items:center;justify-content:center;text-align:center;font:600 .6rem var(--mono);color:var(--muted);line-height:1.2}
+.pad [data-pad="up"]{grid-area:1/2}.pad [data-pad="left"]{grid-area:2/1}.pad .c{grid-area:2/2}
+.pad [data-pad="right"]{grid-area:2/3}.pad [data-pad="down"]{grid-area:3/2}
+.ret-act{display:grid;grid-template-rows:1fr 1fr auto;gap:6px;min-width:0}
+.clk-box{display:grid;grid-template-columns:auto 1fr auto;align-items:center;column-gap:8px;padding:4px 4px 4px 10px;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+.clk-box .k{font:600 .62rem var(--mono);letter-spacing:.1em;color:var(--muted)}
+.clk-box input{width:100%;min-width:0;background:none;border:0;padding:0;font:700 1.45rem var(--mono);color:var(--text);
+  font-variant-numeric:tabular-nums;outline:none;text-align:right}
+.clk-box .sgn{width:40px;height:40px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel2);font:600 .9rem var(--mono);color:var(--muted)}
+.clk-box .need{grid-column:1/-1;font:500 .66rem var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clk-box .need b{color:var(--orange)}
+.ret-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ret-btns .btn{min-height:46px;padding:0 6px;letter-spacing:.06em;font-size:.72rem}
+.btn:disabled{opacity:.4}
+.ret-strip.ret-resid{justify-content:flex-start;margin-top:-4px}
+.ret-resid b{color:var(--text);font-weight:600}
+#segRet button{min-height:38px}
+@media (orientation:landscape) and (max-height:560px){
+  .ret{grid-template-columns:auto minmax(0,1fr);align-items:start;column-gap:16px}
+  .ret-view{width:calc(100dvh - var(--nav-h) - var(--sb) - 60px);max-width:none;min-width:200px}
+  .topbar{padding-top:calc(var(--st) + 4px);padding-bottom:4px}
+}
+@media (min-width:900px) and (min-height:561px){
+  .ret{grid-template-columns:minmax(0,1.3fr) minmax(330px,1fr);align-items:start;column-gap:28px}
+  .ret-view{max-width:min(100%,calc(100dvh - 150px))}
+}
+
+/* ---------- CALIBRAGE ---------- */
+.cal{display:grid;gap:var(--gap)}
+.cal>*,.calc>*,.ret>*,.cal-l>*,.cal-r>*,.calc-in>*,.calc-out>*{min-width:0}
+.nochev::after{display:none}
+.cal-form{padding:12px}
+.field:not(.err) .msg.conv{color:var(--muted);font-family:var(--mono)}
+.calgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px}
+.calgrid span{display:block;font-size:.64rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.calgrid b{display:block;font:600 1.25rem var(--mono);font-variant-numeric:tabular-nums;margin-top:3px}
+.calgrid b.hot{color:var(--orange);font-size:1.6rem}
+.cal-msg{margin:12px 0 0;padding-left:18px;font-size:.8rem;color:var(--text)}
+.cal-msg li{margin:4px 0}
+.cal-msg li.w{color:var(--yellow)}
+#btnUseCal{margin-top:12px}
+#btnUseCal[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
+.rt .del{width:36px;height:36px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel2);color:var(--muted);font:600 .9rem var(--mono)}
+@media (min-width:760px){ .cal{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);align-items:start} }
+
+/* ---------- PROFILS ---------- */
+.prof-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:2px 0 12px}
+.prof-list{display:grid;gap:var(--gap);margin-bottom:14px}
+.pcard{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 10px}
+.pcard[aria-current="true"]{border-color:#4a3a22;background:linear-gradient(90deg,rgba(255,140,26,.07),rgba(255,140,26,0) 45%),var(--panel)}
+.pcard[aria-current="true"]::before{content:"";position:absolute;left:-1px;top:-1px;bottom:-1px;width:3px;background:linear-gradient(var(--yellow),var(--orange),var(--red));border-radius:var(--r) 0 0 var(--r)}
+.pcard .pick{display:block;width:100%;border:0;background:none;padding:0;text-align:left}
+.pcard .nm{display:flex;align-items:center;gap:10px;font-size:1.08rem;font-weight:600}
+.pcard .nm .badge{margin-left:auto}
+.pcard .sub{font-size:.8rem;color:var(--muted);margin-top:2px}
+.pspecs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 10px;margin:12px 0 10px}
+.pspecs span{display:block;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.pspecs b{display:block;font:600 .84rem var(--mono);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pspecs b.cal{color:var(--orange)}
+.pact{display:flex;gap:6px;border-top:1px dashed var(--line);padding-top:8px}
+.pact button{flex:1;min-height:42px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel2);font:600 .7rem var(--mono);letter-spacing:.06em;color:var(--text)}
+.pact button.danger{color:#ff6a4d}
+dialog{width:min(560px,100vw);max-height:calc(100dvh - var(--st) - 12px);margin:auto auto 0;padding:0;border:1px solid var(--line);border-bottom:0;
+  border-radius:6px 6px 0 0;background:var(--panel);color:var(--text)}
+dialog::backdrop{background:rgba(5,6,8,.72)}
+@media (min-width:700px){ dialog{margin:auto;border-bottom:1px solid var(--line);border-radius:6px} }
+#profForm{display:flex;flex-direction:column;max-height:inherit}
+.dlg-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line)}
+.dlg-head .u{min-width:44px;min-height:40px;border:0;background:none;color:var(--muted);font-size:1rem}
+.dlg-body{display:grid;gap:var(--gap);padding:14px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.dlg-foot{display:grid;grid-template-columns:1fr 1.4fr;gap:8px;padding:10px 14px calc(var(--sb) + 12px);border-top:1px solid var(--line)}
+.inp select.u{border-left:1px solid var(--line);color:var(--orange);font:600 .8rem var(--mono);padding:0 12px}
+@media (min-width:760px){ .prof-list{grid-template-columns:1fr 1fr} }
+
+/* ---------- SPLASH : assemblage des triangles du logo (~1.2 s) ---------- */
+#splash{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at center,#1a1d22 0%,var(--bg) 72%);transition:opacity .32s ease}
+#splash.out{opacity:0;pointer-events:none}
+.sp-logo{position:relative;width:min(64vw,300px);aspect-ratio:900/546}
+.sp-logo>i,.sp-logo>img{position:absolute;inset:0;width:100%;height:100%}
+.sp-logo>i{background:url(icons/logo.png) center/100% 100% no-repeat;opacity:0;
+  animation:shard .66s cubic-bezier(.2,.8,.25,1) var(--d) forwards;will-change:transform,opacity}
+.sp-logo>img{opacity:0;animation:fadein .2s linear 1.12s forwards}
+@keyframes shard{from{opacity:0;transform:translate(var(--tx),var(--ty)) rotate(var(--r)) scale(.3)}to{opacity:1;transform:none}}
+@keyframes fadein{to{opacity:1}}
+.sp-name{margin-top:22px;font-weight:700;letter-spacing:.42em;font-size:.95rem;padding-left:.42em;opacity:0;animation:fadein .3s ease .8s forwards}
+.sp-base{margin-top:6px;font:500 .66rem var(--mono);letter-spacing:.14em;color:var(--muted);opacity:0;animation:fadein .3s ease .95s forwards}
+@media (prefers-reduced-motion:reduce){
+  .sp-logo>i{display:none}.sp-logo>img,.sp-name,.sp-base{animation:fadein .2s linear forwards}
+}
+
+/* barre haute alignee sur la colonne de contenu en grand ecran */
+@media (min-width:1220px){ .topbar{padding-left:calc((100% - 1180px)/2 + 14px);padding-right:calc((100% - 1180px)/2 + 14px)} }
+/* paysage telephone : navigation plus compacte */
+@media (orientation:landscape) and (max-height:500px){ :root{--nav-h:50px} .tabs button{flex-direction:row;gap:8px} }
+
+/* paysage / grand ecran : parametres a gauche, solution a droite */
+@media (min-width:760px){
+  .calc{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);align-items:start}
+  .calc-out{position:sticky;top:64px}
+}
+@media (max-width:360px){
+  .crow .val{font-size:1.9rem} .prim b{font-size:1rem} #windClock{width:136px;height:136px}
+}
+</style>
+</head>
+<body>
+<div id="splash" aria-hidden="true">
+  <div class="sp-logo" id="spLogo"><img src="icons/logo.png" alt=""></div>
+  <div class="sp-name">BALLISTIC</div>
+  <div class="sp-base">G1 / G7 · TLD CALC</div>
+</div>
+<script>
+/* Splash : grille de triangles decoupes dans le logo, assembles depuis des positions dispersees. */
+(() => {
+  const box = document.getElementById('spLogo'), C = 10, R = 6, frag = document.createDocumentFragment();
+  for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) for (let k = 0; k < 2; k++) {
+    const x0 = c * 100 / C, x1 = (c + 1) * 100 / C, y0 = r * 100 / R, y1 = (r + 1) * 100 / R;
+    const flip = (r + c) % 2, tri = k === 0
+      ? (flip ? [[x0, y0], [x1, y0], [x0, y1]] : [[x0, y0], [x1, y0], [x1, y1]])
+      : (flip ? [[x1, y0], [x1, y1], [x0, y1]] : [[x0, y0], [x1, y1], [x0, y1]]);
+    const cx = (x0 + x1) / 2 - 50, cy = (y0 + y1) / 2 - 50, dist = Math.hypot(cx, cy * .6);
+    const i = document.createElement('i');
+    i.style.clipPath = 'polygon(' + tri.map(p => p[0] + '% ' + p[1] + '%').join(',') + ')';
+    i.style.setProperty('--tx', (cx * 2.2 + (Math.random() - .5) * 60) + '%');
+    i.style.setProperty('--ty', (cy * 2.2 + (Math.random() - .5) * 60) + '%');
+    i.style.setProperty('--r', ((Math.random() - .5) * 140) + 'deg');
+    i.style.setProperty('--d', (dist / 58 * .42 + Math.random() * .06).toFixed(3) + 's');
+    frag.appendChild(i);
+  }
+  box.insertBefore(frag, box.firstChild);
+  const sp = document.getElementById('splash');
+  const end = () => { sp.classList.add('out'); setTimeout(() => sp.remove(), 360); };
+  const t = setTimeout(end, matchMedia('(prefers-reduced-motion: reduce)').matches ? 450 : 1450);
+  sp.addEventListener('pointerdown', () => { clearTimeout(t); end(); }, { once: true });
+})();
+</script>
+<img class="watermark" src="icons/logo.png" alt="">
+
+<header class="topbar">
+  <img class="mark" src="icons/logo.png" alt="">
+  <button class="chip" id="profileChip" data-go="profiles" aria-label="Profil actif, ouvrir les profils">
+    <span class="k">PROFIL</span><b id="profName"></b><span class="bc-flag" id="bcFlag" hidden>BC CAL.</span>
+  </button>
+</header>
+
+<main>
+<!-- ============================ CALC ============================ -->
+<section class="screen" id="scr-calc" aria-label="Calcul">
+ <div class="calc">
+  <div class="calc-in" style="display:grid;gap:var(--gap)">
+   <div class="panel dist field" data-err="distance">
+     <label class="lbl" for="in-distance">Distance cible</label>
+     <div class="row">
+       <button class="step" data-step="in-distance:-1" aria-label="Diminuer la distance">−</button>
+       <div class="inp"><input id="in-distance" inputmode="decimal" autocomplete="off"><button class="u" data-cycle="distUnit"></button></div>
+       <button class="step" data-step="in-distance:1" aria-label="Augmenter la distance">+</button>
+     </div>
+     <span class="msg"></span>
+   </div>
+
+   <div class="panel wind">
+     <div>
+       <div class="field" data-err="windSpeed">
+         <label class="lbl" for="in-wind">Vent</label>
+         <div class="inp"><input id="in-wind" inputmode="decimal" autocomplete="off"><button class="u" data-cycle="windUnit"></button></div>
+         <span class="msg"></span>
+       </div>
+       <div class="wind-read" id="windRead"></div>
+     </div>
+     <svg id="windClock" viewBox="-60 -60 120 120" role="slider" tabindex="0" aria-label="Direction du vent, cadran horaire" aria-valuemin="1" aria-valuemax="12"></svg>
+   </div>
+
+   <details class="panel" id="atmoBox">
+     <summary class="disclose"><span class="t">Atmosphère</span><span class="s" id="atmoSum"></span></summary>
+     <div class="dbody"><div class="grid2">
+     <div class="field" data-err="altitude">
+       <label class="lbl" for="in-alt">Altitude</label>
+       <div class="inp"><input id="in-alt" inputmode="decimal" autocomplete="off"><button class="u" data-cycle="altUnit"></button></div>
+       <span class="msg"></span>
+     </div>
+     <div class="field" data-err="temperature">
+       <label class="lbl" for="in-temp">Température</label>
+       <div class="inp"><input id="in-temp" inputmode="decimal" autocomplete="off"><button class="u" data-cycle="tempUnit"></button></div>
+       <span class="msg"></span>
+     </div>
+   </div></div>
+   </details>
+
+   <details class="panel" id="ammoBox">
+     <summary class="disclose"><span class="t">Munition &amp; zéro</span><span class="s" id="ammoSum"></span></summary>
+     <div class="dbody">
+       <div class="grid2">
+         <div class="field" data-err="mv">
+           <label class="lbl" for="in-mv">Vitesse initiale</label>
+           <div class="inp"><input id="in-mv" inputmode="decimal" autocomplete="off"><button class="u" data-cycle="velocityUnit"></button></div>
+           <span class="msg"></span>
+         </div>
+         <div class="field" data-err="bc">
+           <label class="lbl" for="in-bc">BC fabricant</label>
+           <div class="inp"><input id="in-bc" inputmode="decimal" autocomplete="off"><span class="u">lb/in²</span></div>
+           <span class="msg"></span>
+         </div>
+       </div>
+       <div>
+         <span class="lbl">Modèle de traînée</span>
+         <div class="seg" id="segDrag"><button data-drag="G1">G1</button><button data-drag="G7">G7</button></div>
+       </div>
+       <div class="grid2">
+         <div class="field" data-err="zeroDistance">
+           <label class="lbl" for="in-zero">Distance de zéro</label>
+           <div class="inp"><input id="in-zero" inputmode="decimal" autocomplete="off"><span class="u" data-unit="distUnit"></span></div>
+           <span class="msg"></span>
+         </div>
+         <div class="field" data-err="sightHeight">
+           <label class="lbl" for="in-sh">Hauteur lunette</label>
+           <div class="inp"><input id="in-sh" inputmode="decimal" autocomplete="off"><button class="u" data-cycle="lenUnit"></button></div>
+           <span class="msg"></span>
+         </div>
+         <div class="field" data-err="zeroTemperature">
+           <label class="lbl" for="in-reft">Temp. au zéro</label>
+           <div class="inp"><input id="in-reft" inputmode="decimal" autocomplete="off"><span class="u" data-unit="tempUnit"></span></div>
+           <span class="msg"></span>
+         </div>
+         <div class="field" data-err="zeroAltitude">
+           <label class="lbl" for="in-refa">Altitude au zéro</label>
+           <div class="inp"><input id="in-refa" inputmode="decimal" autocomplete="off"><span class="u" data-unit="altUnit"></span></div>
+           <span class="msg"></span>
+         </div>
+       </div>
+       <p class="note" style="margin:0">Ces valeurs modifient le profil actif. Le BC calibré se gère dans Calibrage.</p>
+     </div>
+   </details>
+  </div>
+
+  <div class="calc-out" style="display:grid;gap:var(--gap)">
+   <div class="result" id="solution" aria-live="polite">
+     <div class="sol-top"><span class="lbl">Solution</span><span class="badge" id="solBadge" hidden></span></div>
+     <div id="solOk">
+       <div class="prim">
+         <div><span>Distance</span><b id="o-dist"></b></div>
+         <div><span>Chute</span><b id="o-drop"></b></div>
+         <div><span>Dérive</span><b id="o-drift"></b></div>
+       </div>
+       <div class="corr">
+         <div class="crow"><span class="name">Élévation</span><span class="val" id="o-elev"></span><span class="alt" id="o-elev2"></span><span class="clk" id="o-elevClk"></span></div>
+         <div class="crow"><span class="name">Dérive vent</span><span class="val" id="o-wind"></span><span class="alt" id="o-wind2"></span><span class="clk" id="o-windClk"></span></div>
+       </div>
+       <div class="seg" id="segClick" role="group" aria-label="Valeur de clic"></div>
+       <div class="sec" id="o-sec"></div>
+       <div class="warn" id="o-warn" hidden></div>
+     </div>
+     <div class="errbox" id="solErr" hidden><b>CALCUL IMPOSSIBLE</b><ul id="solErrList"></ul></div>
+   </div>
+   <button class="btn" data-go="reticle">Voir au réticule</button>
+   <details class="panel">
+     <summary class="disclose"><span class="t">Table de tir</span><span class="s" id="rtSum"></span></summary>
+     <div class="dbody tscroll"><table class="rt" id="rangeTable"></table></div>
+   </details>
+   <p class="note">Estimation par modèle point matériel G1/G7. Non pris en compte : dérive gyroscopique,
+     Coriolis, angle de site, humidité, pression station, BC multiples. À confirmer par tir réel.</p>
+  </div>
+ </div>
+</section>
+
+<section class="screen" id="scr-reticle" aria-label="Réticule">
+ <div class="ret">
+  <div class="ret-view">
+    <svg id="reticle" role="img" aria-label="Réticule et point d'impact simulé"></svg>
+    <span class="ret-oov" id="retOov" hidden>IMPACT HORS CHAMP</span>
+  </div>
+  <div class="ret-side">
+   <div class="ret-strip" id="retStrip"></div>
+   <div class="ret-strip ret-resid" id="retResid"></div>
+   <div class="ret-ctl">
+    <div class="pad">
+      <button data-pad="up" aria-label="Plus un clic vertical (haut)">▲</button>
+      <button data-pad="left" aria-label="Moins un clic horizontal (gauche)">◀</button>
+      <span class="c" id="padUnit"></span>
+      <button data-pad="right" aria-label="Plus un clic horizontal (droite)">▶</button>
+      <button data-pad="down" aria-label="Moins un clic vertical (bas)">▼</button>
+    </div>
+    <div class="ret-act">
+      <div class="clk-box"><span class="k">VERT</span><input id="in-cv" inputmode="numeric" autocomplete="off" aria-label="Clics verticaux appliqués">
+        <button class="sgn" data-sign="clicksV" aria-label="Inverser le signe vertical">±</button><span class="need" id="needV"></span></div>
+      <div class="clk-box"><span class="k">HORIZ</span><input id="in-ch" inputmode="numeric" autocomplete="off" aria-label="Clics horizontaux appliqués">
+        <button class="sgn" data-sign="clicksH" aria-label="Inverser le signe horizontal">±</button><span class="need" id="needH"></span></div>
+      <div class="ret-btns">
+        <button class="btn" id="btnApply" aria-label="Appliquer les clics de la solution">Solution</button>
+        <button class="btn ghost" id="btnZero" aria-label="Remise à zéro des clics">Zéro</button>
+      </div>
+    </div>
+   </div>
+   <div class="seg" id="segRet" role="group" aria-label="Type de réticule"></div>
+  </div>
+ </div>
+</section>
+<section class="screen" id="scr-calib" aria-label="Calibrage">
+ <div class="cal">
+  <div class="cal-l" style="display:grid;gap:var(--gap)">
+   <form class="panel cal-form" id="calForm" novalidate>
+     <span class="lbl">Ajouter un point de tir</span>
+     <div class="grid2">
+       <div class="field" data-cerr="distance">
+         <label class="lbl" for="c-dist">Distance</label>
+         <div class="inp"><input id="c-dist" inputmode="decimal" autocomplete="off"><span class="u" data-unit="distUnit"></span></div>
+         <span class="msg"></span>
+       </div>
+       <div class="field" data-cerr="shots">
+         <label class="lbl" for="c-shots">Nombre de tirs</label>
+         <div class="inp"><input id="c-shots" inputmode="numeric" autocomplete="off" value="3"></div>
+         <span class="msg"></span>
+       </div>
+       <div class="field" data-cerr="dV">
+         <label class="lbl" for="c-dv">Écart vertical</label>
+         <div class="inp"><input id="c-dv" inputmode="decimal" autocomplete="off" placeholder="+ haut"><span class="u" data-unit="lenUnit"></span></div>
+         <span class="msg conv" id="c-dv-conv"></span>
+       </div>
+       <div class="field" data-cerr="dH">
+         <label class="lbl" for="c-dh">Écart horizontal</label>
+         <div class="inp"><input id="c-dh" inputmode="decimal" autocomplete="off" placeholder="+ droite"><span class="u" data-unit="lenUnit"></span></div>
+         <span class="msg conv" id="c-dh-conv"></span>
+       </div>
+     </div>
+     <p class="note" style="margin:2px 0 0">Écart = centre du groupe moins point visé, en ayant appliqué la correction calculée.
+       Les conditions enregistrées sont celles de l'écran Calc (profil, altitude, température).</p>
+     <button class="btn" type="submit" style="margin-top:12px">Ajouter le point</button>
+   </form>
+  </div>
+  <div class="cal-r" style="display:grid;gap:var(--gap)">
+   <div class="result" id="calRes" aria-live="polite">
+     <div class="sol-top"><span class="lbl">BC calibré</span><span class="badge" id="calBadge" hidden></span></div>
+     <div class="calgrid">
+       <div><span>BC fabricant</span><b id="cr-ref"></b></div>
+       <div><span>BC calibré</span><b class="hot" id="cr-bc"></b></div>
+       <div><span>Écart</span><b id="cr-pct"></b></div>
+       <div><span>Distances / tirs</span><b id="cr-n"></b></div>
+     </div>
+     <ul class="cal-msg" id="cr-msg"></ul>
+     <button class="btn ghost" id="btnUseCal" type="button" hidden></button>
+   </div>
+   <div class="panel">
+     <div class="disclose nochev" style="min-height:44px"><span class="t">Points de calibrage</span><span class="s" id="calCount"></span></div>
+     <div class="tscroll" style="padding:0 10px 10px"><table class="rt" id="calTable"></table></div>
+     <p class="note" id="calEmpty" style="padding:0 14px 14px;margin:0">Aucun point. Tirez un groupe à une distance connue (le plus loin possible : à courte distance le BC a peu d'effet), mesurez l'écart puis ajoutez-le.</p>
+   </div>
+   <details class="panel">
+     <summary class="disclose"><span class="t">Méthode de calcul</span></summary>
+     <div class="dbody note">
+       <p style="margin:0">Pour chaque point, la hauteur réelle d'impact est la hauteur prévue lors du tir (conditions enregistrées)
+       plus l'écart vertical mesuré. Le BC calibré est la valeur unique qui minimise l'écart angulaire (en MIL) entre modèle et
+       impacts réels, pondéré par le nombre de tirs.</p>
+       <p style="margin:0">Limites : la chute seule ne distingue pas une erreur de BC d'une erreur de vitesse initiale, de zéro ou de
+       hauteur de lunette. Le BC calibré absorbe ces erreurs ; mesurez la vitesse au chronographe pour un résultat fiable.
+       L'écart horizontal n'est pas utilisé (il dépend du vent réel, inconnu). Si les distances sont trop courtes pour que le
+       BC ait un effet mesurable, aucun BC n'est proposé.</p>
+     </div>
+   </details>
+  </div>
+ </div>
+</section>
+<section class="screen" id="scr-profiles" aria-label="Profils">
+ <div class="prof-top">
+   <span class="lbl" style="margin:0">Profils arme et munition</span>
+   <button class="btn" id="btnNewProf" style="width:auto;min-height:44px">Nouveau profil</button>
+ </div>
+ <div class="prof-list" id="profList"></div>
+ <p class="note">Les profils, réglages et points de calibrage sont enregistrés sur cet appareil uniquement.</p>
+</section>
+
+<dialog id="profDlg" aria-labelledby="profDlgTitle">
+ <form method="dialog" id="profForm" novalidate>
+  <div class="dlg-head"><b id="profDlgTitle" tabindex="-1" autofocus>Profil</b><button class="u" value="cancel" formnovalidate aria-label="Fermer">✕</button></div>
+  <div class="dlg-body">
+   <div class="field" data-perr="name"><label class="lbl" for="p-name">Nom du profil</label>
+     <div class="inp"><input id="p-name" autocomplete="off" maxlength="40" style="font-family:var(--sans)"></div><span class="msg"></span></div>
+   <div class="grid2">
+     <div class="field"><label class="lbl" for="p-caliber">Calibre</label><div class="inp"><input id="p-caliber" autocomplete="off" maxlength="30" style="font-family:var(--sans)"></div></div>
+     <div class="field"><label class="lbl" for="p-weapon">Arme</label><div class="inp"><input id="p-weapon" autocomplete="off" maxlength="40" style="font-family:var(--sans)"></div></div>
+   </div>
+   <div class="field"><label class="lbl" for="p-ammo">Munition</label><div class="inp"><input id="p-ammo" autocomplete="off" maxlength="50" style="font-family:var(--sans)"></div></div>
+   <div class="grid2">
+     <div class="field" data-perr="mv"><label class="lbl" for="p-mv">Vitesse initiale</label>
+       <div class="inp"><input id="p-mv" inputmode="decimal" autocomplete="off"><select id="p-vu" class="u" aria-label="Unité de vitesse" style="flex:none;width:auto"><option>fps</option><option>m/s</option></select></div><span class="msg"></span></div>
+     <div class="field" data-perr="bc"><label class="lbl" for="p-bc">BC fabricant</label>
+       <div class="inp"><input id="p-bc" inputmode="decimal" autocomplete="off"><select id="p-dm" class="u" aria-label="Modèle de traînée" style="flex:none;width:auto"><option>G7</option><option>G1</option></select></div><span class="msg"></span></div>
+     <div class="field" data-perr="zeroDistance"><label class="lbl" for="p-zero">Distance de zéro</label>
+       <div class="inp"><input id="p-zero" inputmode="decimal" autocomplete="off"><span class="u" data-unit="distUnit"></span></div><span class="msg"></span></div>
+     <div class="field" data-perr="sightHeight"><label class="lbl" for="p-sh">Hauteur lunette</label>
+       <div class="inp"><input id="p-sh" inputmode="decimal" autocomplete="off"><span class="u" data-unit="lenUnit"></span></div><span class="msg"></span></div>
+     <div class="field" data-perr="zeroTemperature"><label class="lbl" for="p-reft">Temp. au zéro</label>
+       <div class="inp"><input id="p-reft" inputmode="decimal" autocomplete="off"><span class="u" data-unit="tempUnit"></span></div><span class="msg"></span></div>
+     <div class="field" data-perr="zeroAltitude"><label class="lbl" for="p-refa">Altitude au zéro</label>
+       <div class="inp"><input id="p-refa" inputmode="decimal" autocomplete="off"><span class="u" data-unit="altUnit"></span></div><span class="msg"></span></div>
+     <div class="field"><label class="lbl" for="p-ret">Réticule</label><div class="inp"><select id="p-ret"></select></div></div>
+     <div class="field"><label class="lbl" for="p-click">Valeur de clic</label><div class="inp"><select id="p-click"></select></div></div>
+   </div>
+  </div>
+  <div class="dlg-foot">
+    <button class="btn ghost" value="cancel" formnovalidate>Annuler</button>
+    <button class="btn" id="profSave" value="save">Enregistrer</button>
+  </div>
+ </form>
+</dialog>
+</main>
+
+<nav class="tabs" aria-label="Navigation">
+  <button data-tab="calc"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M8 7h8M8 12h2M14 12h2M8 16h2M14 16h2"/></svg>CALC</button>
+  <button data-tab="reticle"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 2v6M12 16v6M2 12h6M16 12h6"/></svg>RÉTICULE</button>
+  <button data-tab="calib"><svg viewBox="0 0 24 24"><path d="M4 20h16M7 20V10M12 20V5M17 20v-7"/></svg>CALIBRAGE</button>
+  <button data-tab="profiles"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>PROFILS</button>
+</nav>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script id="core">
+/* =====================================================================
+   CORE : moteur pur, aucune dependance au DOM.
+   Teste sous Node par tests/core.test.js (extraction du bloc script id=core).
+   ===================================================================== */
+const Core = (() => {
+'use strict';
+
+/* ---------------- CONFIG ---------------- */
+const CONFIG = {
+  SCHEMA_VERSION: 1,
+  STORAGE_KEY: 'ballistic.v1',
+  DT: 0.001,               // pas RK4 (s). Ecart < 1 mm a 1000 m vs 0.25 ms (voir tests).
+  MAX_TOF: 8,              // s : au-dela, la distance est hors domaine
+  MIN_VELOCITY: 80,        // m/s : arret si la balle tombe sous ce seuil
+  TABLE_STEP: 50,          // m : pas de la table de tir
+  TABLE_MIN_MAX: 1000,     // m : la table couvre au moins 0..1000 m (labels BDC)
+};
+
+/* ---------------- CONSTANTES ---------------- */
+const G = 9.80665;            // m/s2
+const R_AIR = 287.05;         // J/(kg.K) air sec
+const GAMMA = 1.4;
+const LB_IN2 = 0.45359237 / (0.0254 * 0.0254); // 1 lb/in2 = 703.0696 kg/m2
+const PI = Math.PI;
+
+// Tables de trainee standard (Mach, Cd) G1 / G7 : tables McCoy/JBM, identiques a py-ballisticcalc.
+const flat = s => { const a = s.split(',').map(Number), o = []; for (let i = 0; i < a.length; i += 2) o.push([a[i], a[i + 1]]); return o; };
+const DRAG = {
+  G1: flat('0,0.2629,0.05,0.2558,0.1,0.2487,0.15,0.2413,0.2,0.2344,0.25,0.2278,0.3,0.2214,0.35,0.2155,0.4,0.2104,0.45,0.2061,0.5,0.2032,0.55,0.202,0.6,0.2034,0.7,0.2165,0.725,0.223,0.75,0.2313,0.775,0.2417,0.8,0.2546,0.825,0.2706,0.85,0.2901,0.875,0.3136,0.9,0.3415,0.925,0.3734,0.95,0.4084,0.975,0.4448,1,0.4805,1.025,0.5136,1.05,0.5427,1.075,0.5677,1.1,0.5883,1.125,0.6053,1.15,0.6191,1.2,0.6393,1.25,0.6518,1.3,0.6589,1.35,0.6621,1.4,0.6625,1.45,0.6607,1.5,0.6573,1.55,0.6528,1.6,0.6474,1.65,0.6413,1.7,0.6347,1.75,0.628,1.8,0.621,1.85,0.6141,1.9,0.6072,1.95,0.6003,2,0.5934,2.05,0.5867,2.1,0.5804,2.15,0.5743,2.2,0.5685,2.25,0.563,2.3,0.5577,2.35,0.5527,2.4,0.5481,2.45,0.5438,2.5,0.5397,2.6,0.5325,2.7,0.5264,2.8,0.5211,2.9,0.5168,3,0.5133,3.1,0.5105,3.2,0.5084,3.3,0.5067,3.4,0.5054,3.5,0.504,3.6,0.503,3.7,0.5022,3.8,0.5016,3.9,0.501,4,0.5006,4.2,0.4998,4.4,0.4995,4.6,0.4992,4.8,0.499,5,0.4988'),
+  G7: flat('0,0.1198,0.05,0.1197,0.1,0.1196,0.15,0.1194,0.2,0.1193,0.25,0.1194,0.3,0.1194,0.35,0.1194,0.4,0.1193,0.45,0.1193,0.5,0.1194,0.55,0.1193,0.6,0.1194,0.65,0.1197,0.7,0.1202,0.725,0.1207,0.75,0.1215,0.775,0.1226,0.8,0.1242,0.825,0.1266,0.85,0.1306,0.875,0.1368,0.9,0.1464,0.925,0.166,0.95,0.2054,0.975,0.2993,1,0.3803,1.025,0.4015,1.05,0.4043,1.075,0.4034,1.1,0.4014,1.125,0.3987,1.15,0.3955,1.2,0.3884,1.25,0.381,1.3,0.3732,1.35,0.3657,1.4,0.358,1.5,0.344,1.55,0.3376,1.6,0.3315,1.65,0.326,1.7,0.3209,1.75,0.316,1.8,0.3117,1.85,0.3078,1.9,0.3042,1.95,0.301,2,0.298,2.05,0.2951,2.1,0.2922,2.15,0.2892,2.2,0.2864,2.25,0.2835,2.3,0.2807,2.35,0.2779,2.4,0.2752,2.45,0.2725,2.5,0.2697,2.55,0.267,2.6,0.2643,2.65,0.2615,2.7,0.2588,2.75,0.2561,2.8,0.2533,2.85,0.2506,2.9,0.2479,2.95,0.2451,3,0.2424,3.1,0.2368,3.2,0.2313,3.3,0.2258,3.4,0.2205,3.5,0.2154,3.6,0.2106,3.7,0.206,3.8,0.2017,3.9,0.1975,4,0.1935,4.2,0.1861,4.4,0.1793,4.6,0.173,4.8,0.1672,5,0.1618'),
+};
+
+/* ---------------- CONVERSIONS (source unique) ---------------- */
+// Facteur vers l'unite SI de la dimension. Temperature traitee a part (affine).
+const UNIT = {
+  m: 1, yd: 0.9144, cm: 0.01, in: 0.0254, ft: 0.3048,                 // longueurs
+  'm/s': 1, fps: 0.3048, 'km/h': 1 / 3.6, mph: 0.44704,                // vitesses
+  rad: 1, MOA: PI / 10800, MIL: 0.001,                                 // angles (MOA vrai, mrad vrai)
+};
+const Units = {
+  toSI(v, u) { if (!(u in UNIT)) throw new Error('unite inconnue ' + u); return v * UNIT[u]; },
+  fromSI(v, u) { if (!(u in UNIT)) throw new Error('unite inconnue ' + u); return v / UNIT[u]; },
+  convert(v, from, to) { return Units.fromSI(Units.toSI(v, from), to); },
+  tempToK(v, u) { return u === 'F' ? (v - 32) * 5 / 9 + 273.15 : v + 273.15; },
+  tempFromK(k, u) { return u === 'F' ? (k - 273.15) * 9 / 5 + 32 : k - 273.15; },
+  // Ecart lineaire (m) a une distance (m) -> angle (rad), et inverse. atan exact.
+  offsetToAngle(offsetM, distM) { return Math.atan2(offsetM, distM); },
+  angleToOffset(rad, distM) { return Math.tan(rad) * distM; },
+};
+
+// Valeurs de clic : derivees de l'unite angulaire, jamais de valeur codee en dur ailleurs.
+const CLICKS = {
+  moa_1_4: { label: '1/4 MOA', unit: 'MOA', step: 0.25 },
+  moa_1_8: { label: '1/8 MOA', unit: 'MOA', step: 0.125 },
+  mil_0_1: { label: '0.1 MIL', unit: 'MIL', step: 0.1 },
+  mil_0_2: { label: '0.2 MIL', unit: 'MIL', step: 0.2 },
+};
+for (const k in CLICKS) CLICKS[k].rad = Units.toSI(CLICKS[k].step, CLICKS[k].unit);
+// Nombre de clics (entier, signe) pour une correction angulaire en rad.
+const clicksFor = (rad, clickId) => Math.round(rad / CLICKS[clickId].rad) || 0;
+
+/* ---------------- MODELES DE DONNEES ---------------- */
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+/** BallisticInput : tout en SI. Construit par buildInput() a partir d'un profil + session. */
+function BallisticInput(o) {
+  return {
+    mv: o.mv, bc: o.bc, dragModel: o.dragModel,
+    distance: o.distance,
+    windSpeed: o.windSpeed, windClock: o.windClock,
+    altitude: o.altitude, temperature: o.temperature,
+    zeroDistance: o.zeroDistance, sightHeight: o.sightHeight,
+    zeroAltitude: o.zeroAltitude, zeroTemperature: o.zeroTemperature,
+  };
+}
+
+/** BallisticProfile : unites d'affichage memorisees, valeurs internes en SI. */
+function BallisticProfile(o = {}) {
+  return {
+    id: o.id || uid(),
+    name: o.name || 'Nouveau profil',
+    weapon: o.weapon || '',
+    ammo: o.ammo || '',
+    caliber: o.caliber || '',
+    mv: o.mv ?? 792.48,               // m/s
+    velocityUnit: o.velocityUnit === 'm/s' ? 'm/s' : 'fps',
+    bc: o.bc ?? 0.243,
+    dragModel: o.dragModel === 'G1' ? 'G1' : 'G7',
+    bcCalibrated: Number.isFinite(o.bcCalibrated) ? o.bcCalibrated : null,
+    useCalibrated: !!o.useCalibrated && Number.isFinite(o.bcCalibrated),
+    zeroDistance: o.zeroDistance ?? 100,   // m
+    sightHeight: o.sightHeight ?? 0.05,    // m
+    refTemperature: o.refTemperature ?? 288.15, // K (temperature au zerotage)
+    refAltitude: o.refAltitude ?? 0,       // m (altitude au zerotage)
+    reticle: o.reticle in RETICLES ? o.reticle : 'mildot',
+    clickId: o.clickId in CLICKS ? o.clickId : 'mil_0_1',
+    calibration: Array.isArray(o.calibration) ? o.calibration.map(CalibrationPoint).filter(Boolean) : [],
+    updatedAt: o.updatedAt || Date.now(),
+  };
+}
+
+/** CalibrationPoint : ecart observe (impact reel - impact prevu), + = haut / droite. */
+function CalibrationPoint(o) {
+  if (!o || !Number.isFinite(o.distance) || !o.snapshot) return null;
+  return {
+    id: o.id || uid(),
+    distance: o.distance,          // m
+    dV: Number.isFinite(o.dV) ? o.dV : 0,   // m
+    dH: Number.isFinite(o.dH) ? o.dH : 0,   // m
+    shots: Math.max(1, Math.round(o.shots) || 1),
+    snapshot: BallisticInput(o.snapshot),   // conditions au moment du tir (BC utilise inclus)
+  };
+}
+
+/* ---------------- VALIDATION ---------------- */
+const LIMITS = {
+  mv: [100, 1700, 'Vitesse initiale'], bc: [0.02, 1.5, 'BC'],
+  distance: [1, 2500, 'Distance'], windSpeed: [0, 40, 'Vent'],
+  altitude: [-500, 6000, 'Altitude'], temperature: [223.15, 333.15, 'Température'],
+  zeroDistance: [10, 1000, 'Distance de zéro'], sightHeight: [0, 0.2, 'Hauteur de lunette'],
+  zeroAltitude: [-500, 6000, 'Altitude au zéro'], zeroTemperature: [223.15, 333.15, 'Température au zéro'],
+};
+function validateInput(inp) {
+  const errors = [];
+  for (const k in LIMITS) {
+    const v = inp[k], [lo, hi, label] = LIMITS[k];
+    if (!Number.isFinite(v)) errors.push({ field: k, msg: label + ' : valeur manquante ou invalide' });
+    else if (v < lo || v > hi) errors.push({ field: k, msg: label + ' : hors limites', lo, hi });
+  }
+  if (!(inp.dragModel in DRAG)) errors.push({ field: 'dragModel', msg: 'Modèle G1 ou G7 requis' });
+  if (!Number.isInteger(inp.windClock) || inp.windClock < 1 || inp.windClock > 12)
+    errors.push({ field: 'windClock', msg: 'Direction du vent : 1h à 12h' });
+  return errors;
+}
+
+/* ---------------- CALCULS BALISTIQUES ----------------
+   Modele point materiel 3DOF (x aval, y haut, z droite), RK4 en temps.
+   Simplifications (affichees aussi dans l'interface) :
+   - pas de derive gyroscopique, pas d'effet Coriolis/Eotvos, pas de saut aerodynamique ;
+   - tir horizontal (angle de site non pris en compte) ;
+   - pression = atmosphere standard a l'altitude saisie (pas de pression station), air sec ;
+   - vent uniforme sur toute la trajectoire, sans composante verticale ;
+   - BC constant (pas de BC multiples par plage de vitesse).
+*/
+function atmosphere(altM, tempK) {
+  const P = 101325 * Math.pow(1 - 2.25577e-5 * altM, 5.25588);
+  return { P, rho: P / (R_AIR * tempK), a: Math.sqrt(GAMMA * R_AIR * tempK) };
+}
+function cdAt(table, mach) {
+  if (mach <= table[0][0]) return table[0][1];
+  const n = table.length;
+  if (mach >= table[n - 1][0]) return table[n - 1][1];
+  let lo = 0, hi = n - 1;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (table[m][0] <= mach) lo = m; else hi = m; }
+  const [m0, c0] = table[lo], [m1, c1] = table[hi];
+  return c0 + (c1 - c0) * (mach - m0) / (m1 - m0);
+}
+/** Composantes du vent pour un cadran horaire (12h = vent de face, 3h = vient de droite). */
+function windVector(speed, clock) {
+  const th = (clock % 12) * PI / 6;
+  // vitesse de l'air (vers ou il souffle) : oppose a la direction d'ou il vient
+  return { wx: -speed * Math.cos(th), wz: -speed * Math.sin(th),
+           cross: speed * Math.sin(th), head: speed * Math.cos(th) };
+}
+
+/**
+ * Integre une trajectoire. samples : distances (m) croissantes ou echantillonner.
+ * Retourne { points[], reached } ; points[i] = {x,y,z,v,t,mach} interpoles lineairement.
+ */
+function fly(p, angle, samples) {
+  const table = DRAG[p.dragModel];
+  const atm = p.atm;
+  const k = atm.rho * PI / (8 * p.bc * LB_IN2);
+  const { wx, wz } = p.wind;
+  const dt = CONFIG.DT;
+  let s = [0, -p.sightHeight, 0, p.mv * Math.cos(angle), p.mv * Math.sin(angle), 0];
+  let t = 0;
+  const f = (q) => {
+    const rx = q[3] - wx, ry = q[4], rz = q[5] - wz;
+    const vr = Math.sqrt(rx * rx + ry * ry + rz * rz);
+    const d = k * cdAt(table, vr / atm.a) * vr;
+    return [q[3], q[4], q[5], -d * rx, -d * ry - G, -d * rz];
+  };
+  const add = (a, b, h) => a.map((v, i) => v + b[i] * h);
+  const out = [];
+  let si = 0;
+  while (si < samples.length) {
+    const k1 = f(s), k2 = f(add(s, k1, dt / 2)), k3 = f(add(s, k2, dt / 2)), k4 = f(add(s, k3, dt));
+    const n = s.map((v, i) => v + dt / 6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]));
+    const tn = t + dt;
+    while (si < samples.length && n[0] >= samples[si]) {
+      const X = samples[si], r = (X - s[0]) / (n[0] - s[0]);
+      const L = (a, b) => a + (b - a) * r;
+      const vx = L(s[3], n[3]), vy = L(s[4], n[4]), vz = L(s[5], n[5]);
+      const v = Math.sqrt(vx * vx + vy * vy + vz * vz);
+      out.push({ x: X, y: L(s[1], n[1]), z: L(s[2], n[2]), v, t: L(t, tn), mach: v / atm.a });
+      si++;
+    }
+    s = n; t = tn;
+    const v = Math.hypot(s[3], s[4], s[5]);
+    if (t > CONFIG.MAX_TOF || v < CONFIG.MIN_VELOCITY || s[3] <= 0) break;
+  }
+  return { points: out, reached: si === samples.length };
+}
+
+/** Angle de depart (rad) tel que la trajectoire coupe la ligne de visee a la distance de zero. */
+function zeroAngle(inp) {
+  const p = { mv: inp.mv, bc: inp.bc, dragModel: inp.dragModel, sightHeight: inp.sightHeight,
+              atm: atmosphere(inp.zeroAltitude, inp.zeroTemperature), wind: { wx: 0, wz: 0 } };
+  const yAt = a => { const r = fly(p, a, [inp.zeroDistance]); return r.reached ? r.points[0].y : NaN; };
+  let a0 = 0, a1 = (inp.sightHeight + 0.5 * G * (inp.zeroDistance / inp.mv) ** 2) / inp.zeroDistance;
+  let y0 = yAt(a0), y1 = yAt(a1);
+  for (let i = 0; i < 20 && Math.abs(y1) > 1e-6; i++) {   // secante : y quasi lineaire en angle
+    const a2 = a1 - y1 * (a1 - a0) / (y1 - y0);
+    a0 = a1; y0 = y1; a1 = a2; y1 = yAt(a1);
+    if (!Number.isFinite(y1)) return NaN;
+  }
+  return Math.abs(y1) < 1e-4 ? a1 : NaN;
+}
+
+/**
+ * solve(BallisticInput) -> BallisticSolution
+ * Conventions : y < 0 = sous la ligne de visee ; z > 0 = a droite.
+ * elevRad > 0 = corriger vers le HAUT ; windRad > 0 = corriger vers la DROITE.
+ */
+function solve(inp) {
+  const errors = validateInput(inp);
+  if (errors.length) return { ok: false, errors, input: inp };
+  const angle = zeroAngle(inp);
+  if (!Number.isFinite(angle)) return { ok: false, errors: [{ field: 'zeroDistance', msg: 'Zéro impossible avec ces paramètres' }], input: inp };
+  const atm = atmosphere(inp.altitude, inp.temperature);
+  const wind = windVector(inp.windSpeed, inp.windClock);
+  const maxTable = Math.max(inp.distance, CONFIG.TABLE_MIN_MAX);
+  const dists = [];
+  for (let d = CONFIG.TABLE_STEP; d < maxTable + 1e-9; d += CONFIG.TABLE_STEP) dists.push(d);
+  if (!dists.includes(inp.distance)) dists.push(inp.distance);
+  dists.sort((a, b) => a - b);
+  const r = fly({ ...inp, atm, wind }, angle, dists);
+  const row = pt => ({
+    distance: pt.x, y: pt.y, z: pt.z, velocity: pt.v, tof: pt.t, mach: pt.mach,
+    elevRad: -Units.offsetToAngle(pt.y, pt.x), windRad: -Units.offsetToAngle(pt.z, pt.x),
+  });
+  const table = r.points.map(row);
+  const at = table.find(p => p.distance === inp.distance);
+  if (!at) return { ok: false, errors: [{ field: 'distance', msg: 'Distance hors du domaine du modèle (vitesse trop faible ou temps de vol trop long)' }], input: inp };
+  const warnings = [];
+  if (at.mach < 1) warnings.push('Balle subsonique à cette distance : modèle peu fiable.');
+  else if (at.mach < 1.2) warnings.push('Zone transsonique : précision réduite.');
+  return {
+    ok: true, input: inp, angle, atm, wind,
+    distance: inp.distance, drop: at.y, drift: at.z,
+    elevRad: at.elevRad, windRad: at.windRad,
+    velocity: at.velocity, tof: at.tof, mach: at.mach,
+    table: table.filter(p => p.distance % CONFIG.TABLE_STEP === 0),
+    warnings,
+  };
+}
+
+/* ---------------- CALIBRATION (BC ajuste) ----------------
+   Chaque point stocke les conditions du tir (snapshot, BC utilise inclus) et l'ecart
+   vertical observe dV (impact reel - impact prevu, + = haut).
+   Hauteur reelle = y_prevu(snapshot) + dV. On cherche le BC unique minimisant
+   sum( shots_i * (theta_model_i(BC) - theta_obs_i)^2 ) en angle (MIL), pour ne pas
+   sur-ponderer les longues distances en cm. Balayage log + section doree.
+   Limite : BC et vitesse initiale sont indiscernables a partir de la seule chute ;
+   le BC calibre absorbe donc aussi l'erreur de vitesse, de zero ou de hauteur de lunette.
+   L'ecart horizontal n'est pas utilise (depend du vent reel, inconnu).
+   rifle (optionnel) : parametres actuels du profil {bc, dragModel, mv, zeroDistance, sightHeight,
+   zeroAltitude, zeroTemperature}. La prediction "au moment du tir" utilise le snapshot ; le modele
+   ajuste utilise les parametres actuels (ex. vitesse corrigee au chrono, modele G1/G7 change).
+*/
+function calibrateBC(points, rifle = {}) {
+  const pts = (points || []).filter(p => p && p.snapshot);
+  const res = { status: 'insufficient', bc: null, bcRef: null, deltaPct: null, nPoints: pts.length,
+                nShots: pts.reduce((s, p) => s + p.shots, 0), rmsMil: null, messages: [] };
+  if (!pts.length) { res.messages.push('Aucun point de calibrage.'); return res; }
+  const bcRef = Number.isFinite(rifle.bc) ? rifle.bc : pts[0].snapshot.bc; res.bcRef = bcRef;
+  const over = {};
+  for (const k of ['dragModel', 'mv', 'zeroDistance', 'sightHeight', 'zeroAltitude', 'zeroTemperature']) if (rifle[k] !== undefined) over[k] = rifle[k];
+  const theta = (snap, bc, d) => {
+    const s = solve({ ...snap, ...over, bc, distance: d, windSpeed: 0 });
+    return s.ok ? Units.fromSI(-s.elevRad, 'MIL') : NaN;   // angle de l'impact sous la visee (mil, + = haut)
+  };
+  const obs = pts.map(p => {
+    const pred = solve({ ...p.snapshot, distance: p.distance, windSpeed: 0 });
+    return pred.ok ? Units.fromSI(Units.offsetToAngle(pred.drop + p.dV, p.distance), 'MIL') : NaN;
+  });
+  if (obs.some(v => !Number.isFinite(v))) { res.messages.push('Un point ne peut pas être calculé (paramètres invalides).'); return res; }
+  // Sensibilite : de combien (mil) l'impact bouge si le BC varie de +/-5 %
+  const sens = pts.map(p => Math.abs(theta(p.snapshot, bcRef * 1.05, p.distance) - theta(p.snapshot, bcRef * 0.95, p.distance)));
+  if (Math.max(...sens) < 0.1) {
+    // distance minimale utile pour ce profil (meme critere), pour guider l'utilisateur
+    let dMin = NaN;
+    for (let d = 100; d <= 2000; d += 50) { if (Math.abs(theta(pts[0].snapshot, bcRef * 1.05, d) - theta(pts[0].snapshot, bcRef * 0.95, d)) >= 0.1) { dMin = d; break; } }
+    res.minDistance = dMin;
+    res.messages.push('Distances trop courtes : une variation de 10 % du BC déplace l\'impact de moins de 0.1 MIL.' +
+      (Number.isFinite(dMin) ? ' Pour ce profil, tirer au-delà d\'environ ' + dMin + ' m.' : ''));
+    return res;
+  }
+  const cost = bc => pts.reduce((s, p, i) => s + p.shots * (theta(p.snapshot, bc, p.distance) - obs[i]) ** 2, 0);
+  const lo = Math.log(bcRef / 3), hi = Math.log(bcRef * 3), N = 24;
+  let best = 0, bestC = Infinity;
+  for (let i = 0; i <= N; i++) { const c = cost(Math.exp(lo + (hi - lo) * i / N)); if (c < bestC) { bestC = c; best = i; } }
+  if (best === 0 || best === N) { res.status = 'unreliable'; res.messages.push('Aucun BC plausible ne reproduit ces écarts (facteur 3 dépassé). Vérifier zéro, vitesse et saisies.'); return res; }
+  let a = lo + (hi - lo) * (best - 1) / N, b = lo + (hi - lo) * (best + 1) / N;
+  const gr = (Math.sqrt(5) - 1) / 2;
+  let c = b - gr * (b - a), d = a + gr * (b - a), fc = cost(Math.exp(c)), fd = cost(Math.exp(d));
+  for (let i = 0; i < 30; i++) {
+    if (fc < fd) { b = d; d = c; fd = fc; c = b - gr * (b - a); fc = cost(Math.exp(c)); }
+    else { a = c; c = d; fc = fd; d = a + gr * (b - a); fd = cost(Math.exp(d)); }
+  }
+  const bc = Math.exp((a + b) / 2);
+  res.bc = bc; res.deltaPct = (bc / bcRef - 1) * 100;
+  res.rmsMil = Math.sqrt(cost(bc) / res.nShots);
+  res.status = pts.length === 1 ? 'indicative' : 'ok';
+  if (pts.length === 1) res.messages.push('Une seule distance : estimation indicative. Ajouter une 2e distance éloignée pour confirmer.');
+  if (pts.length > 1 && res.rmsMil > 0.3) { res.status = 'inconsistent'; res.messages.push('Les points ne sont pas cohérents entre eux (résidu ' + res.rmsMil.toFixed(2) + ' MIL). Vérifier vitesse initiale et zéro.'); }
+  if (Math.abs(res.deltaPct) > 25) res.messages.push('Écart > 25 % : probablement une erreur de vitesse initiale ou de zéro plutôt que de BC.');
+  return res;
+}
+
+/* ---------------- ETAT RETICULE ----------------
+   Unique moteur de positionnement du point d'impact. Le rendu SVG lit seulement x/y.
+   Impact par rapport au centre (rad) = -correction + clics appliques * valeur du clic.
+   Hypothese : reticule au premier plan focal (subtensions vraies a tout grossissement).
+*/
+const RETICLES = {
+  mildot: { label: 'MIL-Dot', halfSpanMil: 6 },
+  moa:    { label: 'MOA', halfSpanMil: Units.convert(20, 'MOA', 'MIL') },
+  xmas:   { label: 'Christmas Tree', halfSpanMil: 10 },
+  bdc:    { label: 'BDC', halfSpanMil: 10 },
+};
+function ReticleState({ type, clickId, clicksV = 0, clicksH = 0, solution }) {
+  const half = Units.toSI(RETICLES[type].halfSpanMil, 'MIL');
+  const st = { type, clickId, clicksV, clicksH, x: 0, y: 0, outOfView: false, solution: solution || null,
+               impactV: NaN, impactH: NaN, halfSpanMil: RETICLES[type].halfSpanMil,
+               needV: 0, needH: 0 };
+  if (!solution || !solution.ok) return st;
+  const c = CLICKS[clickId].rad;
+  st.impactV = -solution.elevRad + clicksV * c;   // rad, + = impact au-dessus du centre
+  st.impactH = -solution.windRad + clicksH * c;   // rad, + = impact a droite du centre
+  st.needV = clicksFor(solution.elevRad, clickId);
+  st.needH = clicksFor(solution.windRad, clickId);
+  const nx = st.impactH / half, ny = st.impactV / half;
+  st.outOfView = Math.abs(nx) > 1 || Math.abs(ny) > 1;
+  st.x = Math.max(-1, Math.min(1, nx));
+  st.y = Math.max(-1, Math.min(1, ny));
+  return st;
+}
+
+/** Changement de valeur de clic : conserve la meme correction angulaire (arrondie au clic). */
+function convertClicks(n, fromId, toId) { return Math.round(n * CLICKS[fromId].rad / CLICKS[toId].rad) || 0; }
+/** BDC : distance (m) ou la correction d'elevation vaut holdRad, interpolee dans la table de la solution.
+    Lecture de la table calculee par solve(), aucun recalcul balistique. NaN si hors table. */
+function distanceForHold(table, holdRad) {
+  for (let i = 1; i < table.length; i++) {
+    const a = table[i - 1], b = table[i];
+    if (a.elevRad <= holdRad && b.elevRad >= holdRad && b.elevRad > a.elevRad)
+      return a.distance + (b.distance - a.distance) * (holdRad - a.elevRad) / (b.elevRad - a.elevRad);
+  }
+  return NaN;
+}
+
+/* ---------------- PROFILS ---------------- */
+const Profiles = {
+  defaults() {
+    return [
+      BallisticProfile({ name: '.308 Win — 175gr', weapon: 'Carabine .308', ammo: 'Sierra MatchKing 175gr', caliber: '.308 Win',
+        mv: Units.toSI(2600, 'fps'), velocityUnit: 'fps', bc: 0.243, dragModel: 'G7', reticle: 'mildot', clickId: 'mil_0_1' }),
+      BallisticProfile({ name: '6.5 Creedmoor — 140gr', weapon: 'Carabine 6.5 CM', ammo: 'Hornady ELD Match 140gr', caliber: '6.5 Creedmoor',
+        mv: Units.toSI(2710, 'fps'), velocityUnit: 'fps', bc: 0.326, dragModel: 'G7', reticle: 'xmas', clickId: 'moa_1_4' }),
+    ];
+  },
+  duplicate(p) { return BallisticProfile({ ...JSON.parse(JSON.stringify(p)), id: uid(), name: p.name + ' (copie)', updatedAt: Date.now() }); },
+};
+
+/* ---------------- ETAT APPLICATION ---------------- */
+function defaultSession() {
+  return { distance: 500, windSpeed: Units.toSI(10, 'km/h'), windClock: 3, altitude: 0, temperature: 288.15, clicksV: 0, clicksH: 0, tab: 'calc' };
+}
+function defaultPrefs() { return { distUnit: 'm', windUnit: 'km/h', tempUnit: 'C', altUnit: 'm', lenUnit: 'cm' }; }
+function defaultState() {
+  const profiles = Profiles.defaults();
+  return { schemaVersion: CONFIG.SCHEMA_VERSION, profiles, activeProfileId: profiles[0].id, prefs: defaultPrefs(), session: defaultSession() };
+}
+/** Profil actif + session -> BallisticInput (SI). */
+function buildInput(profile, session) {
+  return BallisticInput({
+    mv: profile.mv, bc: profile.useCalibrated && Number.isFinite(profile.bcCalibrated) ? profile.bcCalibrated : profile.bc,
+    dragModel: profile.dragModel, distance: session.distance,
+    windSpeed: session.windSpeed, windClock: session.windClock,
+    altitude: session.altitude, temperature: session.temperature,
+    zeroDistance: profile.zeroDistance, sightHeight: profile.sightHeight,
+    zeroAltitude: profile.refAltitude, zeroTemperature: profile.refTemperature,
+  });
+}
+
+/* ---------------- LOCALSTORAGE (schema versionne) ---------------- */
+const pick = (obj, def, check) => { const o = { ...def }; if (obj && typeof obj === 'object') for (const k in def) if (k in obj && check(k, obj[k])) o[k] = obj[k]; return o; };
+const PREF_OK = { distUnit: ['m', 'yd'], windUnit: ['km/h', 'm/s', 'mph'], tempUnit: ['C', 'F'], altUnit: ['m', 'ft'], lenUnit: ['cm', 'in'] };
+const MIGRATIONS = {
+  // 0 -> 1 : exemple pour les futures versions ; aucune donnee v0 n'existe encore.
+};
+function migrate(raw) {
+  let d = raw, v = Number(raw && raw.schemaVersion) || 0;
+  if (v > CONFIG.SCHEMA_VERSION) throw new Error('schema plus recent');
+  while (v < CONFIG.SCHEMA_VERSION) { d = MIGRATIONS[v] ? MIGRATIONS[v](d) : d; v++; }
+  const def = defaultState();
+  const profiles = Array.isArray(d.profiles) ? d.profiles.filter(p => p && typeof p === 'object').map(BallisticProfile) : [];
+  const st = {
+    schemaVersion: CONFIG.SCHEMA_VERSION,
+    profiles: profiles.length ? profiles : def.profiles,
+    prefs: pick(d.prefs, def.prefs, (k, v) => PREF_OK[k].includes(v)),
+    session: pick(d.session, def.session, (k, v) => k === 'tab' ? ['calc', 'reticle', 'calib', 'profiles'].includes(v) : Number.isFinite(v)),
+  };
+  st.activeProfileId = st.profiles.some(p => p.id === d.activeProfileId) ? d.activeProfileId : st.profiles[0].id;
+  if (!Number.isInteger(st.session.windClock) || st.session.windClock < 1 || st.session.windClock > 12) st.session.windClock = def.session.windClock;
+  return st;
+}
+const Storage = {
+  /** -> { state, warning } ; ne jette jamais. Donnees corrompues sauvegardees a part. */
+  load(ls) {
+    let raw;
+    try { raw = ls.getItem(CONFIG.STORAGE_KEY); } catch (e) { return { state: defaultState(), warning: 'Stockage local indisponible : les données ne seront pas conservées.' }; }
+    if (raw == null) return { state: defaultState(), warning: null };
+    try { return { state: migrate(JSON.parse(raw)), warning: null }; }
+    catch (e) {
+      try { ls.setItem(CONFIG.STORAGE_KEY + '.corrupt', raw); } catch (_) {}
+      return { state: defaultState(), warning: 'Données locales illisibles : réinitialisées (copie conservée).' };
+    }
+  },
+  save(ls, state) {
+    try { ls.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state)); return true; } catch (e) { return false; }
+  },
+};
+
+return { CONFIG, CONSTANTS: { G, R_AIR, GAMMA, LB_IN2 }, DRAG, UNIT, Units, CLICKS, clicksFor, RETICLES, LIMITS,
+  BallisticInput, BallisticProfile, CalibrationPoint, ReticleState, validateInput, convertClicks, distanceForHold,
+  atmosphere, cdAt, windVector, fly, zeroAngle, solve, calibrateBC,
+  Profiles, defaultState, defaultSession, buildInput, migrate, Storage, uid };
+})();
+</script>
+
+<script id="ui">
+/* =====================================================================
+   UI : lit l'etat, appelle Core, affiche. Aucun calcul balistique ici.
+   ===================================================================== */
+(() => {
+'use strict';
+const { Units, CLICKS, RETICLES } = Core;
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const NS = 'http://www.w3.org/2000/svg';
+
+/* ---------------- ETAT APPLICATION ---------------- */
+const loaded = Core.Storage.load(window.localStorage);
+const App = { state: loaded.state, solution: null, reticle: null };
+window.App = App; // inspection / tests navigateur
+const S = () => App.state.session;
+const P = () => App.state.profiles.find(p => p.id === App.state.activeProfileId);
+const prefs = () => App.state.prefs;
+
+let saveTimer = null;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { if (!Core.Storage.save(window.localStorage, App.state)) toast('Sauvegarde locale impossible.'); }, 200);
+}
+const saveNow = () => { clearTimeout(saveTimer); Core.Storage.save(window.localStorage, App.state); };
+window.addEventListener('pagehide', saveNow);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveNow(); });
+
+/* ---------------- AFFICHAGE : unites et formats ---------------- */
+// dim -> unite d'affichage courante. Toute conversion passe par Core.Units.
+const DIM = {
+  dist: () => prefs().distUnit, wind: () => prefs().windUnit, alt: () => prefs().altUnit,
+  len: () => prefs().lenUnit, vel: () => P().velocityUnit,
+};
+const toD = (v, dim) => dim === 'temp' ? Units.tempFromK(v, prefs().tempUnit) : dim in DIM ? Units.fromSI(v, DIM[dim]()) : v;
+const fromD = (v, dim) => dim === 'temp' ? Units.tempToK(v, prefs().tempUnit) : dim in DIM ? Units.toSI(v, DIM[dim]()) : v;
+const unitLabel = dim => dim === 'temp' ? '°' + prefs().tempUnit : dim in DIM ? DIM[dim]() : '';
+const UNIT_KEY_LABEL = { distUnit: 'dist', windUnit: 'wind', altUnit: 'alt', lenUnit: 'len', tempUnit: 'temp', velocityUnit: 'vel' };
+/** Nombre -> texte ; jamais NaN/Infinity a l'ecran. */
+const fmt = (v, d = 1) => Number.isFinite(v) ? (Math.abs(v) < 0.5 * 10 ** -d ? 0 : v).toFixed(d) : '--';
+const fmtIn = (v, d) => Number.isFinite(v) ? String(+v.toFixed(d)) : '';
+function parseNum(t) {
+  const s = String(t).trim().replace(',', '.');
+  return /^[-+]?(\d+\.?\d*|\.\d+)$/.test(s) ? Number(s) : NaN;
+}
+
+/* ---------------- CHAMPS ---------------- */
+// id -> ou est stockee la valeur (SI), dimension, decimales, cle d'erreur de validateInput
+const FIELDS = {
+  'in-distance': { o: 'session', k: 'distance', dim: 'dist', d: 0, step: 25 },
+  'in-wind':     { o: 'session', k: 'windSpeed', dim: 'wind', d: 1 },
+  'in-alt':      { o: 'session', k: 'altitude', dim: 'alt', d: 0 },
+  'in-temp':     { o: 'session', k: 'temperature', dim: 'temp', d: 1 },
+  'in-mv':       { o: 'profile', k: 'mv', dim: 'vel', d: 1, err: 'mv' },
+  'in-bc':       { o: 'profile', k: 'bc', dim: 'plain', d: 3, err: 'bc' },
+  'in-zero':     { o: 'profile', k: 'zeroDistance', dim: 'dist', d: 0, err: 'zeroDistance' },
+  'in-sh':       { o: 'profile', k: 'sightHeight', dim: 'len', d: 2, err: 'sightHeight' },
+  'in-reft':     { o: 'profile', k: 'refTemperature', dim: 'temp', d: 1, err: 'zeroTemperature' },
+  'in-refa':     { o: 'profile', k: 'refAltitude', dim: 'alt', d: 0, err: 'zeroAltitude' },
+};
+const ERR_DIM = { distance: 'dist', windSpeed: 'wind', altitude: 'alt', temperature: 'temp', mv: 'vel', bc: 'plain',
+  zeroDistance: 'dist', sightHeight: 'len', zeroAltitude: 'alt', zeroTemperature: 'temp' };
+const store = f => f.o === 'session' ? S() : P();
+
+function fillForm() {
+  for (const id in FIELDS) {
+    const f = FIELDS[id], el = document.getElementById(id);
+    if (el && document.activeElement !== el) el.value = fmtIn(toD(store(f)[f.k], f.dim), f.d);
+  }
+  $$('[data-cycle]').forEach(b => b.textContent = unitLabel(UNIT_KEY_LABEL[b.dataset.cycle]));
+  $$('[data-unit]').forEach(b => b.textContent = unitLabel(UNIT_KEY_LABEL[b.dataset.unit]));
+  $$('#segDrag button').forEach(b => b.setAttribute('aria-pressed', b.dataset.drag === P().dragModel));
+}
+
+document.addEventListener('input', e => {
+  const f = FIELDS[e.target.id]; if (!f) return;
+  const v = parseNum(e.target.value);
+  store(f)[f.k] = Number.isFinite(v) ? fromD(v, f.dim) : NaN;
+  if (f.o === 'profile') P().updatedAt = Date.now();
+  recompute();
+});
+document.addEventListener('focusout', e => { if (FIELDS[e.target.id]) fillForm(); });
+
+$$('[data-step]').forEach(b => b.addEventListener('click', () => {
+  const [id, dir] = b.dataset.step.split(':'); const f = FIELDS[id];
+  const cur = toD(store(f)[f.k], f.dim);
+  const st = f.step || 1;
+  const base = Number.isFinite(cur) ? cur : 0;
+  const next = Math.max(st, (Math.round(base / st) + Number(dir)) * st);
+  store(f)[f.k] = fromD(next, f.dim);
+  document.getElementById(id).value = fmtIn(next, f.d);
+  recompute();
+}));
+
+const CYCLE = { distUnit: ['m', 'yd'], windUnit: ['km/h', 'm/s', 'mph'], altUnit: ['m', 'ft'], lenUnit: ['cm', 'in'], tempUnit: ['C', 'F'], velocityUnit: ['fps', 'm/s'] };
+$$('[data-cycle]').forEach(b => b.addEventListener('click', () => {
+  const k = b.dataset.cycle, opts = CYCLE[k];
+  const obj = k === 'velocityUnit' ? P() : prefs();
+  obj[k] = opts[(opts.indexOf(obj[k]) + 1) % opts.length];
+  fillForm(); recompute();
+}));
+
+$$('#segDrag button').forEach(b => b.addEventListener('click', () => {
+  P().dragModel = b.dataset.drag; P().updatedAt = Date.now(); fillForm(); recompute();
+}));
+
+/* ---------------- CADRAN DE VENT ---------------- */
+const clock = $('#windClock');
+(function buildClock() {
+  const el = (n, a, parent = clock) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); parent.appendChild(e); return e; };
+  el('circle', { r: 57, class: 'ring' });
+  el('line', { x1: 0, y1: 0, x2: 0, y2: -30, class: 'shot' });
+  el('circle', { cy: -30, r: 3.5, class: 'tgt' });
+  el('path', { d: 'M0 -5 L4 4 L0 2 L-4 4 Z', class: 'shooter' });
+  el('path', { id: 'windArrow', class: 'arrow', d: '' });
+  for (let h = 1; h <= 12; h++) {
+    const a = h * Math.PI / 6, x = 46 * Math.sin(a), y = -46 * Math.cos(a);
+    el('circle', { cx: x, cy: y, r: 8.5, class: 'hdot', 'data-h': h });
+    const t = el('text', { x, y, class: 'hr', 'data-h': h }); t.textContent = h;
+  }
+})();
+function setClockFromPoint(ev) {
+  const r = clock.getBoundingClientRect();
+  const dx = ev.clientX - (r.left + r.width / 2), dy = ev.clientY - (r.top + r.height / 2);
+  if (Math.hypot(dx, dy) < r.width * 0.12) return;   // centre : ignore
+  let h = Math.round(Math.atan2(dx, -dy) / (Math.PI / 6));
+  h = ((h % 12) + 12) % 12 || 12;
+  if (h !== S().windClock) { S().windClock = h; recompute(); }
+}
+clock.addEventListener('pointerdown', e => { clock.setPointerCapture(e.pointerId); setClockFromPoint(e); });
+clock.addEventListener('pointermove', e => { if (clock.hasPointerCapture(e.pointerId)) setClockFromPoint(e); });
+clock.addEventListener('keydown', e => {
+  const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key]; if (!d) return;
+  e.preventDefault(); S().windClock = ((S().windClock - 1 + d + 12) % 12) + 1; recompute();
+});
+function renderClock() {
+  const h = S().windClock, a = h * Math.PI / 6, sx = Math.sin(a), sy = -Math.cos(a);
+  $$('[data-h]', clock).forEach(n => n.classList.toggle('on', +n.dataset.h === h));
+  // fleche : vient de l'heure h, pointe vers le tireur
+  const x0 = 33 * sx, y0 = 33 * sy, x1 = 11 * sx, y1 = 11 * sy, px = -sy, py = sx;
+  $('#windArrow').setAttribute('d', `M${x0} ${y0} L${x1} ${y1} M${x1 + 6 * sx + 4 * px} ${y1 + 6 * sy + 4 * py} L${x1} ${y1} L${x1 + 6 * sx - 4 * px} ${y1 + 6 * sy - 4 * py}`);
+  clock.setAttribute('aria-valuenow', h); clock.setAttribute('aria-valuetext', h + ' heures');
+  const w = Core.windVector(S().windSpeed, h), u = prefs().windUnit;
+  const cr = toD(Math.abs(w.cross), 'wind'), hd = toD(Math.abs(w.head), 'wind');
+  $('#windRead').innerHTML =
+    `<span>Travers <b>${fmt(cr, 1)} ${u}</b></span><span>${w.head >= 0 ? 'Face' : 'Dos'} <b>${fmt(hd, 1)} ${u}</b></span>` +
+    `<span>Vient ${h === 12 ? 'de face' : h === 6 ? 'de dos' : h < 6 ? 'de droite' : 'de gauche'} <b>${h}h</b></span>`;
+}
+
+/* ---------------- NAVIGATION ---------------- */
+function showTab(tab) {
+  S().tab = tab;
+  $$('.screen').forEach(s => s.classList.toggle('active', s.id === 'scr-' + tab));
+  $$('.tabs button').forEach(b => b.dataset.tab === tab ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'));
+  window.scrollTo(0, 0);
+  renderAll(); save();
+}
+$$('.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) showTab(g.dataset.go); });
+
+/* ---------------- TOAST ---------------- */
+let toastT;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 3200);
+}
+
+/* ---------------- RECALCUL ---------------- */
+function recompute() {
+  App.solution = Core.solve(Core.buildInput(P(), S()));
+  App.reticle = Core.ReticleState({ type: P().reticle, clickId: P().clickId, clicksV: S().clicksV, clicksH: S().clicksH, solution: App.solution });
+  renderAll(); save();
+  refreshCalibIfStale();
+}
+
+/* ---------------- RENDU CALC ---------------- */
+const clickFamily = () => CLICKS[P().clickId].unit;          // MIL ou MOA : unite principale affichee
+const other = u => u === 'MIL' ? 'MOA' : 'MIL';
+const dirV = n => n > 0 ? 'HAUT' : n < 0 ? 'BAS' : '';
+const dirH = n => n > 0 ? 'DROITE' : n < 0 ? 'GAUCHE' : '';
+function clicksHtml(n, dir, arrowPos, arrowNeg) {
+  return `${n > 0 ? arrowPos : n < 0 ? arrowNeg : ''} ${Math.abs(n)}<small>CLICS ${dir}</small>`;
+}
+function renderCalc() {
+  const s = App.solution, p = P();
+  $('#profName').textContent = p.name;
+  $('#bcFlag').hidden = !(p.useCalibrated && Number.isFinite(p.bcCalibrated));
+  renderClock();
+  $('#atmoSum').textContent = `${fmt(toD(S().altitude, 'alt'), 0)} ${prefs().altUnit}   ${fmt(toD(S().temperature, 'temp'), 1)} ${unitLabel('temp')}`;
+  $('#ammoSum').textContent = `${fmtIn(toD(p.mv, 'vel'), 0)} ${p.velocityUnit}  ${p.dragModel} ${fmt(p.bc, 3)}`;
+  // erreurs de champ
+  $$('.field[data-err]').forEach(f => { f.classList.remove('err'); $('.msg', f).textContent = ''; });
+  $('#solOk').hidden = !s.ok; $('#solErr').hidden = s.ok;
+  if (!s.ok) {
+    $('#solErrList').innerHTML = '';
+    for (const e of s.errors) {
+      const dim = ERR_DIM[e.field];
+      const range = e.lo != null ? ` (${fmtIn(toD(e.lo, dim), 2)} à ${fmtIn(toD(e.hi, dim), 2)} ${unitLabel(dim)})` : '';
+      const li = document.createElement('li'); li.textContent = e.msg + range; $('#solErrList').appendChild(li);
+      const f = $(`.field[data-err="${e.field}"]`);
+      if (f) { f.classList.add('err'); $('.msg', f).textContent = e.msg + range; if (f.closest('details')) f.closest('details').open = true; }
+    }
+    $('#solBadge').hidden = true;
+    return;
+  }
+  const lu = prefs().lenUnit, du = prefs().distUnit, U = clickFamily();
+  $('#o-dist').innerHTML = `${fmt(toD(s.distance, 'dist'), 0)}<small> ${du}</small>`;
+  $('#o-drop').innerHTML = `${fmt(toD(s.drop, 'len'), 1)}<small> ${lu}</small>`;
+  $('#o-drift').innerHTML = `${fmt(toD(Math.abs(s.drift), 'len'), 1)}<small> ${lu} ${Math.abs(s.drift) < 0.0005 ? '' : s.drift > 0 ? 'D' : 'G'}</small>`;
+  const nV = Core.clicksFor(s.elevRad, p.clickId), nH = Core.clicksFor(s.windRad, p.clickId);
+  $('#o-elev').innerHTML = `${fmt(Units.fromSI(s.elevRad, U), 2)}<i>${U}</i>`;
+  $('#o-elev2').textContent = `${fmt(Units.fromSI(s.elevRad, other(U)), 2)} ${other(U)}`;
+  $('#o-elevClk').innerHTML = clicksHtml(nV, dirV(nV), '▲', '▼');
+  $('#o-wind').innerHTML = `${fmt(Units.fromSI(s.windRad, U), 2)}<i>${U}</i>`;
+  $('#o-wind2').textContent = `${fmt(Units.fromSI(s.windRad, other(U)), 2)} ${other(U)}`;
+  $('#o-windClk').innerHTML = clicksHtml(nH, dirH(nH), '▶', '◀');
+  const segC = $('#segClick');
+  if (!segC.children.length) for (const id in CLICKS) {
+    const b = document.createElement('button'); b.textContent = CLICKS[id].label; b.dataset.click = id;
+    b.addEventListener('click', () => changeClick(id));
+    segC.appendChild(b);
+  }
+  $$('button', segC).forEach(b => b.setAttribute('aria-pressed', b.dataset.click === p.clickId));
+  const bcUsed = s.input.bc, cal = p.useCalibrated && Number.isFinite(p.bcCalibrated);
+  $('#o-sec').innerHTML = `<span>V <b>${fmt(toD(s.velocity, 'vel'), 0)} ${p.velocityUnit}</b></span><span>Mach <b>${fmt(s.mach, 2)}</b></span>` +
+    `<span>Temps de vol <b>${fmt(s.tof, 2)} s</b></span><span>BC <b>${fmt(bcUsed, 3)} ${p.dragModel}${cal ? ' calibré' : ''}</b></span>`;
+  $('#o-warn').hidden = !s.warnings.length; $('#o-warn').textContent = s.warnings.join(' ');
+  $('#solBadge').hidden = !s.warnings.length; $('#solBadge').textContent = s.mach < 1 ? 'SUBSONIQUE' : 'TRANSSONIQUE';
+  renderRangeTable(s, U, lu);
+}
+function renderRangeTable(s, U, lu) {
+  const p = P();
+  let h = `<thead><tr><th>${prefs().distUnit}</th><th>Chute ${lu}</th><th>Élév. ${U}</th><th>Clics</th><th>Vent ${U}</th><th>V ${p.velocityUnit}</th></tr></thead><tbody>`;
+  for (const r of s.table) {
+    h += `<tr${Math.abs(r.distance - s.distance) < 1e-6 ? ' class="here"' : ''}><td>${fmt(toD(r.distance, 'dist'), 0)}</td><td>${fmt(toD(r.y, 'len'), 1)}</td>` +
+      `<td>${fmt(Units.fromSI(r.elevRad, U), 2)}</td><td>${Core.clicksFor(r.elevRad, p.clickId)}</td><td>${fmt(Units.fromSI(r.windRad, U), 2)}</td><td>${fmt(toD(r.velocity, 'vel'), 0)}</td></tr>`;
+  }
+  $('#rangeTable').innerHTML = h + '</tbody>';
+  $('#rtSum').textContent = `${s.table.length} lignes, pas ${fmt(toD(Core.CONFIG.TABLE_STEP, 'dist'), 0)} ${prefs().distUnit}`;
+}
+
+/* ---------------- RETICULE : interaction ---------------- */
+const fmtSigned = n => (n > 0 ? '+' : '') + n;
+function setClicks(v, h) {
+  S().clicksV = Math.max(-999, Math.min(999, Math.round(v) || 0));
+  S().clicksH = Math.max(-999, Math.min(999, Math.round(h) || 0));
+  recompute();
+}
+$$('[data-pad]').forEach(b => b.addEventListener('click', () => {
+  const d = { up: [1, 0], down: [-1, 0], right: [0, 1], left: [0, -1] }[b.dataset.pad];
+  setClicks(S().clicksV + d[0], S().clicksH + d[1]);
+}));
+$('#btnZero').addEventListener('click', () => setClicks(0, 0));
+$('#btnApply').addEventListener('click', () => { if (App.solution && App.solution.ok) setClicks(App.reticle.needV, App.reticle.needH); });
+$$('[data-sign]').forEach(b => b.addEventListener('click', () =>
+  b.dataset.sign === 'clicksV' ? setClicks(-S().clicksV, S().clicksH) : setClicks(S().clicksV, -S().clicksH)));
+for (const [id, k] of [['in-cv', 'clicksV'], ['in-ch', 'clicksH']]) {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    const v = parseNum(el.value); if (!Number.isFinite(v)) return;
+    k === 'clicksV' ? setClicks(v, S().clicksH) : setClicks(S().clicksV, v);
+  });
+  el.addEventListener('blur', () => el.value = fmtSigned(S()[k]));
+}
+function changeClick(id) {
+  const from = P().clickId; if (from === id) return;
+  S().clicksV = Core.convertClicks(S().clicksV, from, id);
+  S().clicksH = Core.convertClicks(S().clicksH, from, id);
+  P().clickId = id; P().updatedAt = Date.now(); recompute();
+}
+
+/* ---------------- RETICULE : rendu SVG ----------------
+   Repere : unites MIL, origine au centre, y SVG vers le bas.
+   Le point d'impact provient uniquement de App.reticle (Core.ReticleState) : cx = x*H, cy = -y*H. */
+const BDC_HOLDS_MIL = [1.2, 2.5, 4.0, 5.8, 7.8];   // graduations generiques du BDC (geometrie, pas balistique)
+const mm = v => Units.convert(v, 'MOA', 'MIL');
+function reticleSvg(type, H, sol) {
+  const L = (x1, y1, x2, y2, c = 'ln') => `<line class="${c}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+  const D = (x, y, r) => `<circle class="dot" cx="${x}" cy="${y}" r="${r}"/>`;
+  const T = (x, y, t, sz, c = 'lab', anchor = 'middle') => `<text class="${c}" x="${x}" y="${y}" font-size="${sz}" text-anchor="${anchor}" dominant-baseline="central">${t}</text>`;
+  let g = '';
+  if (type === 'mildot') {
+    g += L(-5, 0, 5, 0) + L(0, -5, 0, 5);
+    g += L(-H, 0, -5, 0, 'post') + L(5, 0, H, 0, 'post') + L(0, -H, 0, -5, 'post') + L(0, 5, 0, H, 'post');
+    for (let i = 1; i <= 4; i++) g += D(i, 0, .125) + D(-i, 0, .125) + D(0, i, .125) + D(0, -i, .125);
+  } else if (type === 'moa') {
+    g += L(-H, 0, H, 0) + L(0, -H, 0, H);
+    for (let m = 2; m <= 20; m += 2) {
+      const v = mm(m), big = m % 10 === 0, t = big ? mm(1.2) : mm(.6);
+      for (const s of [1, -1]) g += L(s * v, -t, s * v, t) + L(-t, s * v, t, s * v);
+      if (big && m < 20) g += T(v, mm(2.6), m, mm(1.6)) + T(mm(2.4), v, m, mm(1.6), 'lab', 'start');
+    }
+  } else if (type === 'xmas') {
+    g += L(-H, 0, H, 0) + L(0, -5, 0, H);
+    for (let i = 1; i < H; i++) {
+      const t = i % 5 === 0 ? .4 : .22;
+      g += L(i, -t, i, t) + L(-i, -t, -i, t);
+      if (i <= 5) g += L(-t, -i, t, -i);
+    }
+    for (let i = .5; i < H; i += 1) g += L(i, -.1, i, .1) + L(-i, -.1, -i, .1) + L(-.1, i, .1, i);
+    for (let k = 1; k <= 9; k++) {
+      const w = 1 + Math.floor(k * .6);
+      for (let x = -w; x <= w; x++) if (x) g += D(x, k, .07);
+      if (k % 2 === 0) g += T(-w - .8, k, k, .55);
+    }
+  } else if (type === 'bdc') {
+    g += L(-H, 0, -.6, 0) + L(.6, 0, H, 0) + L(0, -H, 0, -.6) + L(0, .6, 0, H);
+    g += D(0, 0, .09);
+    BDC_HOLDS_MIL.forEach((h, i) => {
+      const w = 1.6 + .45 * i;
+      g += L(-w, h, w, h);
+      const d = sol && sol.ok ? Core.distanceForHold(sol.table, Units.toSI(h, 'MIL')) : NaN;
+      g += T(w + .35, h, Number.isFinite(d) ? fmt(toD(d, 'dist'), 0) + ' ' + prefs().distUnit : '--', .62, 'bdc-lab', 'start');
+    });
+  }
+  return `<defs><clipPath id="fieldClip"><circle r="${H}"/></clipPath></defs><circle class="field" r="${H - .02}"/><g clip-path="url(#fieldClip)">${g}</g>`;
+}
+let retCache = '';
+function renderReticle() {
+  const r = App.reticle, p = P(), H = r.halfSpanMil, svg = $('#reticle'), sol = r.solution;
+  svg.setAttribute('viewBox', `${-H} ${-H} ${2 * H} ${2 * H}`);
+  const key = r.type + '|' + prefs().distUnit + '|' + (r.type === 'bdc' && sol && sol.ok ? sol.table.map(t => t.elevRad.toFixed(6)).join() : '');
+  if (key !== retCache) { svg.innerHTML = reticleSvg(r.type, H, sol) + '<g id="impG"></g>'; retCache = key; }
+  const ok = !!(sol && sol.ok), cx = r.x * H, cy = -r.y * H, rr = H * .045;
+  let imp = '';
+  if (ok) {
+    imp += `<line class="path" x1="0" y1="0" x2="${cx}" y2="${cy}"/>`;
+    if (r.outOfView) {
+      const a = Math.atan2(cy, cx), s = H * .08, px = cx - Math.cos(a) * s, py = cy - Math.sin(a) * s;
+      imp += `<path class="oov" d="M${cx} ${cy} L${px - Math.sin(a) * s * .6} ${py + Math.cos(a) * s * .6} L${px + Math.sin(a) * s * .6} ${py - Math.cos(a) * s * .6} Z"/>`;
+    } else {
+      imp += `<circle class="imp-halo" cx="${cx}" cy="${cy}" r="${rr}"/><circle class="imp" id="impact" cx="${cx}" cy="${cy}" r="${rr}"/>`;
+    }
+  }
+  $('#impG').innerHTML = imp;
+  $('#retOov').hidden = !(ok && r.outOfView);
+  const U = clickFamily(), cl = CLICKS[p.clickId];
+  $('#retStrip').innerHTML = ok
+    ? `<span>${fmt(toD(sol.distance, 'dist'), 0)} ${prefs().distUnit}</span><span>ÉLÉV <b>${fmt(Units.fromSI(sol.elevRad, U), 2)}</b> ${U}</span><span>VENT <b>${fmt(Units.fromSI(sol.windRad, U), 2)}</b> ${U}</span>`
+    : '<span>Solution indisponible : corriger les paramètres dans Calc.</span>';
+  const segR = $('#segRet');
+  if (!segR.children.length) for (const t in RETICLES) {
+    const b = document.createElement('button'); b.textContent = t === 'xmas' ? 'Tree' : RETICLES[t].label; b.dataset.ret = t;
+    b.setAttribute('aria-label', RETICLES[t].label);
+    b.addEventListener('click', () => { P().reticle = t; P().updatedAt = Date.now(); recompute(); });
+    segR.appendChild(b);
+  }
+  $$('button', segR).forEach(b => b.setAttribute('aria-pressed', b.dataset.ret === p.reticle));
+  for (const [id, k] of [['in-cv', 'clicksV'], ['in-ch', 'clicksH']]) { const el = document.getElementById(id); if (document.activeElement !== el) el.value = fmtSigned(S()[k]); }
+  $('#needV').innerHTML = ok ? `sol. <b>${fmtSigned(r.needV)}</b> ${dirV(r.needV)}` : '';
+  $('#needH').innerHTML = ok ? `sol. <b>${fmtSigned(r.needH)}</b> ${dirH(r.needH)}` : '';
+  $('#padUnit').textContent = cl.label;
+  $('#btnApply').disabled = !ok;
+  const dv = Units.fromSI(r.impactV, U), dh = Units.fromSI(r.impactH, U);
+  $('#retResid').innerHTML = ok
+    ? `<span>Impact <b>${fmt(Math.abs(dv), 2)} ${U}</b> ${Math.abs(dv) < .005 ? '' : dv > 0 ? 'haut' : 'bas'}</span><span><b>${fmt(Math.abs(dh), 2)} ${U}</b> ${Math.abs(dh) < .005 ? '' : dh > 0 ? 'droite' : 'gauche'}</span>`
+    : '';
+}
+
+/* ---------------- CALIBRAGE ---------------- */
+const calForm = $('#calForm');
+function readCalForm() {
+  const v = id => parseNum($('#' + id).value);
+  const dist = v('c-dist'), dv = $('#c-dv').value.trim() === '' ? 0 : v('c-dv'), dh = $('#c-dh').value.trim() === '' ? 0 : v('c-dh'), shots = v('c-shots');
+  const o = { distance: fromD(dist, 'dist'), dV: fromD(dv, 'len'), dH: fromD(dh, 'len'), shots }, err = {};
+  const [lo, hi] = Core.LIMITS.distance;
+  if (!Number.isFinite(o.distance)) err.distance = 'Distance requise';
+  else if (o.distance < 50 || o.distance > hi) err.distance = `Entre ${fmtIn(toD(50, 'dist'), 0)} et ${fmtIn(toD(hi, 'dist'), 0)} ${prefs().distUnit}`;
+  if (!Number.isFinite(o.dV)) err.dV = 'Nombre invalide'; else if (Math.abs(o.dV) > 5) err.dV = 'Écart > 5 m : vérifier la saisie';
+  if (!Number.isFinite(o.dH)) err.dH = 'Nombre invalide'; else if (Math.abs(o.dH) > 5) err.dH = 'Écart > 5 m : vérifier la saisie';
+  if (!Number.isInteger(shots) || shots < 1 || shots > 100) err.shots = 'Entier de 1 à 100';
+  return { o, err };
+}
+// conversion en direct de l'ecart saisi (meme fonctions centralisees que le tableau)
+const angTxt = (off, dist) => Number.isFinite(off) && Number.isFinite(dist) && dist > 0
+  ? `${fmt(Units.fromSI(Units.offsetToAngle(off, dist), 'MOA'), 2)} MOA  ${fmt(Units.fromSI(Units.offsetToAngle(off, dist), 'MIL'), 2)} MIL` : '';
+calForm.addEventListener('input', () => {
+  const { o } = readCalForm();
+  $('#c-dv-conv').textContent = angTxt(o.dV, o.distance); $('#c-dh-conv').textContent = angTxt(o.dH, o.distance);
+  $$('.field[data-cerr]', calForm).forEach(f => f.classList.remove('err'));
+});
+calForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const { o, err } = readCalForm();
+  $$('.field[data-cerr]', calForm).forEach(f => { const m = err[f.dataset.cerr]; f.classList.toggle('err', !!m); if (m) $('.msg', f).textContent = m; });
+  if (Object.keys(err).length) return;
+  const snap = Core.buildInput(P(), S());
+  const v = Core.validateInput({ ...snap, distance: o.distance });
+  if (v.length) { toast('Paramètres de Calc invalides : ' + v[0].msg); return; }
+  const pt = Core.CalibrationPoint({ ...o, snapshot: { ...snap, distance: o.distance } });
+  P().calibration.push(pt); P().calibration.sort((a, b) => a.distance - b.distance); P().updatedAt = Date.now();
+  calForm.reset(); $('#c-shots').value = '3'; $('#c-dv-conv').textContent = $('#c-dh-conv').textContent = '';
+  toast('Point ajouté : ' + fmt(toD(o.distance, 'dist'), 0) + ' ' + prefs().distUnit);
+  save(); renderCalib();
+});
+$('#calTable').addEventListener('click', e => {
+  const b = e.target.closest('[data-del]'); if (!b) return;
+  P().calibration = P().calibration.filter(p => p.id !== b.dataset.del); P().updatedAt = Date.now();
+  save(); renderCalib();
+});
+$('#btnUseCal').addEventListener('click', () => {
+  const p = P(); p.useCalibrated = !p.useCalibrated && Number.isFinite(p.bcCalibrated); p.updatedAt = Date.now();
+  recompute();
+});
+let calCache = { key: '', res: null };
+const rifleOf = p => ({ bc: p.bc, dragModel: p.dragModel, mv: p.mv, zeroDistance: p.zeroDistance, sightHeight: p.sightHeight, zeroAltitude: p.refAltitude, zeroTemperature: p.refTemperature });
+const calibKey = p => p.id + JSON.stringify(p.calibration) + JSON.stringify(rifleOf(p));
+function calibResult() {
+  const p = P(), key = calibKey(p);
+  if (calCache.key !== key) calCache = { key, res: Core.calibrateBC(p.calibration, rifleOf(p)) };
+  return calCache.res;
+}
+// BC calibre actif + parametres du profil modifies ailleurs (Calc, editeur) : recalcul differe
+let calTimer = null;
+function refreshCalibIfStale() {
+  const p = P();
+  if (!p.useCalibrated || !p.calibration.length || calCache.key === calibKey(p)) return;
+  clearTimeout(calTimer);
+  calTimer = setTimeout(() => {
+    const q = P(); if (!q.useCalibrated) return;
+    const r = calibResult();
+    if (Number.isFinite(r.bc)) q.bcCalibrated = r.bc;
+    else { q.bcCalibrated = null; q.useCalibrated = false; toast('BC calibré désactivé : plus d\'estimation fiable avec ces paramètres.'); }
+    recompute();
+  }, 700);
+}
+const STATUS = { ok: 'FIABLE', indicative: 'INDICATIF', inconsistent: 'INCOHÉRENT', insufficient: 'INSUFFISANT', unreliable: 'NON FIABLE' };
+function renderCalib() {
+  const p = P(), pts = p.calibration, lu = prefs().lenUnit, du = prefs().distUnit;
+  $$('[data-unit]', calForm).forEach(b => b.textContent = unitLabel(UNIT_KEY_LABEL[b.dataset.unit]));
+  // tableau
+  $('#calEmpty').hidden = pts.length > 0; $('#calTable').hidden = !pts.length;
+  $('#calCount').textContent = pts.length ? `${pts.length} distance${pts.length > 1 ? 's' : ''}` : '';
+  let h = `<thead><tr><th>Dist. ${du}</th><th>Écart V ${lu}</th><th>Écart H ${lu}</th><th>MOA V</th><th>MOA H</th><th>MIL V</th><th>MIL H</th><th>Tirs</th><th></th></tr></thead><tbody>`;
+  for (const q of pts) {
+    const aV = Units.offsetToAngle(q.dV, q.distance), aH = Units.offsetToAngle(q.dH, q.distance);
+    h += `<tr><td>${fmt(toD(q.distance, 'dist'), 0)}</td><td>${fmt(toD(q.dV, 'len'), 1)}</td><td>${fmt(toD(q.dH, 'len'), 1)}</td>` +
+      `<td>${fmt(Units.fromSI(aV, 'MOA'), 2)}</td><td>${fmt(Units.fromSI(aH, 'MOA'), 2)}</td><td>${fmt(Units.fromSI(aV, 'MIL'), 2)}</td><td>${fmt(Units.fromSI(aH, 'MIL'), 2)}</td>` +
+      `<td>${q.shots}</td><td><button class="del" data-del="${q.id}" aria-label="Supprimer le point à ${fmt(toD(q.distance, 'dist'), 0)} ${du}">✕</button></td></tr>`;
+  }
+  $('#calTable').innerHTML = h + '</tbody>';
+  // resultat
+  const r = calibResult();
+  if (Number.isFinite(r.bc)) { if (p.bcCalibrated !== r.bc) { p.bcCalibrated = r.bc; save(); } }
+  else if (p.bcCalibrated !== null) { p.bcCalibrated = null; if (p.useCalibrated) { p.useCalibrated = false; recompute(); return; } save(); }
+  $('#cr-ref').textContent = `${fmt(p.bc, 3)} ${p.dragModel}`;
+  $('#cr-bc').textContent = Number.isFinite(r.bc) ? fmt(r.bc, 3) : '--';
+  $('#cr-pct').textContent = Number.isFinite(r.deltaPct) ? `${r.deltaPct > 0 ? '+' : ''}${fmt(r.deltaPct, 1)} %` : '--';
+  $('#cr-n').textContent = `${r.nPoints} / ${r.nShots}`;
+  $('#calBadge').hidden = !pts.length; $('#calBadge').textContent = STATUS[r.status] || '';
+  const msgs = [...r.messages];
+  if (Number.isFinite(r.rmsMil) && r.status !== 'indicative') msgs.push(`Résidu après ajustement : ${fmt(r.rmsMil, 2)} MIL.`);
+  $('#cr-msg').innerHTML = msgs.map(m => `<li class="${r.status === 'ok' ? '' : 'w'}">${m}</li>`).join('');
+  const b = $('#btnUseCal'); b.hidden = !Number.isFinite(r.bc);
+  b.setAttribute('aria-pressed', !!p.useCalibrated);
+  b.textContent = p.useCalibrated ? 'BC calibré utilisé dans Calc' : 'Utiliser le BC calibré';
+}
+
+/* ---------------- PROFILS ---------------- */
+const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function selectProfile(id) {
+  if (id === App.state.activeProfileId) return;
+  App.state.activeProfileId = id;
+  S().clicksV = 0; S().clicksH = 0;            // autre arme : tourelles a zero
+  fillForm(); recompute();
+  toast('Profil actif : ' + P().name);
+}
+function renderProfiles() {
+  const list = $('#profList'), act = App.state.activeProfileId;
+  list.innerHTML = App.state.profiles.map(p => {
+    const cal = p.useCalibrated && Number.isFinite(p.bcCalibrated), on = p.id === act;
+    return `<article class="pcard" aria-current="${on}" data-id="${p.id}">
+      <button class="pick" data-act="select" aria-label="Sélectionner ${esc(p.name)}">
+        <div class="nm"><span>${esc(p.name)}</span>${on ? '<span class="badge">ACTIF</span>' : ''}</div>
+        <div class="sub">${esc([p.caliber, p.ammo].filter(Boolean).join(', ') || 'Calibre et munition non renseignés')}</div>
+        <div class="pspecs">
+          <div><span>BC</span><b class="${cal ? 'cal' : ''}">${fmt(cal ? p.bcCalibrated : p.bc, 3)} ${p.dragModel}${cal ? ' cal.' : ''}</b></div>
+          <div><span>Vitesse</span><b>${fmtIn(Units.fromSI(p.mv, p.velocityUnit), 0)} ${p.velocityUnit}</b></div>
+          <div><span>Zéro</span><b>${fmt(toD(p.zeroDistance, 'dist'), 0)} ${prefs().distUnit}</b></div>
+          <div><span>Réticule</span><b>${RETICLES[p.reticle].label}</b></div>
+          <div><span>Clic</span><b>${CLICKS[p.clickId].label}</b></div>
+          <div><span>Calibrage</span><b>${p.calibration.length ? p.calibration.length + ' pt' : '--'}</b></div>
+        </div>
+      </button>
+      <div class="pact">
+        <button data-act="edit">Modifier</button><button data-act="dup">Dupliquer</button>
+        <button data-act="del" class="danger" ${App.state.profiles.length < 2 ? 'disabled' : ''}>Supprimer</button>
+      </div></article>`;
+  }).join('');
+}
+$('#profList').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const id = b.closest('.pcard').dataset.id, p = App.state.profiles.find(x => x.id === id);
+  if (b.dataset.act === 'select') selectProfile(id);
+  else if (b.dataset.act === 'edit') openProfile(p);
+  else if (b.dataset.act === 'dup') {
+    const d = Core.Profiles.duplicate(p);
+    App.state.profiles.splice(App.state.profiles.indexOf(p) + 1, 0, d);
+    save(); renderProfiles(); toast('Profil dupliqué');
+  } else if (b.dataset.act === 'del') {
+    if (App.state.profiles.length < 2) return;
+    if (!confirm(`Supprimer le profil « ${p.name} » et ses points de calibrage ?`)) return;
+    App.state.profiles = App.state.profiles.filter(x => x.id !== id);
+    if (App.state.activeProfileId === id) { App.state.activeProfileId = App.state.profiles[0].id; S().clicksV = S().clicksH = 0; fillForm(); }
+    recompute(); toast('Profil supprimé');
+  }
+});
+// --- editeur ---
+const dlg = $('#profDlg'), pf = $('#profForm');
+let editing = null;   // profil edite (null = creation)
+for (const t in RETICLES) $('#p-ret').add(new Option(RETICLES[t].label, t));
+for (const c in CLICKS) $('#p-click').add(new Option(CLICKS[c].label, c));
+const PF = { 'p-zero': ['zeroDistance', 'dist', 0], 'p-sh': ['sightHeight', 'len', 2], 'p-reft': ['refTemperature', 'temp', 1], 'p-refa': ['refAltitude', 'alt', 0] };
+function openProfile(p) {
+  editing = p || null;
+  const q = p || Core.BallisticProfile({ name: '', mv: Units.toSI(2700, 'fps'), bc: 0.25 });
+  $('#profDlgTitle').textContent = p ? 'Modifier le profil' : 'Nouveau profil';
+  $('#p-name').value = q.name; $('#p-caliber').value = q.caliber; $('#p-weapon').value = q.weapon; $('#p-ammo').value = q.ammo;
+  $('#p-vu').value = q.velocityUnit; $('#p-mv').value = fmtIn(Units.fromSI(q.mv, q.velocityUnit), 1);
+  $('#p-bc').value = fmtIn(q.bc, 3); $('#p-dm').value = q.dragModel;
+  for (const id in PF) $('#' + id).value = fmtIn(toD(q[PF[id][0]], PF[id][1]), PF[id][2]);
+  $('#p-ret').value = q.reticle; $('#p-click').value = q.clickId;
+  $$('[data-unit]', pf).forEach(b => b.textContent = unitLabel(UNIT_KEY_LABEL[b.dataset.unit]));
+  $$('.field', pf).forEach(f => { f.classList.remove('err'); const m = $('.msg', f); if (m) m.textContent = ''; });
+  dlg.showModal();
+}
+$('#btnNewProf').addEventListener('click', () => openProfile(null));
+$('#p-vu').addEventListener('change', () => {   // conversion de la valeur saisie lors du changement d'unite
+  const v = parseNum($('#p-mv').value), from = $('#p-vu').value === 'fps' ? 'm/s' : 'fps';
+  if (Number.isFinite(v)) $('#p-mv').value = fmtIn(Units.convert(v, from, $('#p-vu').value), 1);
+});
+$('#profSave').addEventListener('click', e => {
+  e.preventDefault();
+  const name = $('#p-name').value.trim();
+  const o = {
+    name, caliber: $('#p-caliber').value.trim(), weapon: $('#p-weapon').value.trim(), ammo: $('#p-ammo').value.trim(),
+    velocityUnit: $('#p-vu').value, mv: Units.toSI(parseNum($('#p-mv').value), $('#p-vu').value),
+    bc: parseNum($('#p-bc').value), dragModel: $('#p-dm').value, reticle: $('#p-ret').value, clickId: $('#p-click').value,
+  };
+  for (const id in PF) o[PF[id][0]] = fromD(parseNum($('#' + id).value), PF[id][1]);
+  const err = {};
+  if (!name) err.name = 'Nom requis';
+  const chk = { mv: o.mv, bc: o.bc, zeroDistance: o.zeroDistance, sightHeight: o.sightHeight, zeroTemperature: o.refTemperature, zeroAltitude: o.refAltitude };
+  for (const k in chk) {
+    const [lo, hi] = Core.LIMITS[k], dim = ERR_DIM[k], v = chk[k];
+    const dimShown = k === 'mv' ? null : dim;
+    const show = x => dimShown ? fmtIn(toD(x, dimShown), 2) + ' ' + unitLabel(dimShown) : k === 'mv' ? fmtIn(Units.fromSI(x, o.velocityUnit), 0) + ' ' + o.velocityUnit : x;
+    if (!Number.isFinite(v)) err[k] = 'Valeur requise';
+    else if (v < lo || v > hi) err[k] = `Entre ${show(lo)} et ${show(hi)}`;
+  }
+  $$('.field[data-perr]', pf).forEach(f => { const m = err[f.dataset.perr]; f.classList.toggle('err', !!m); $('.msg', f).textContent = m || ''; });
+  if (Object.keys(err).length) return;
+  if (editing) {
+    if (editing.clickId !== o.clickId && editing.id === App.state.activeProfileId) {
+      S().clicksV = Core.convertClicks(S().clicksV, editing.clickId, o.clickId); S().clicksH = Core.convertClicks(S().clicksH, editing.clickId, o.clickId);
+    }
+    Object.assign(editing, o, { updatedAt: Date.now() });
+    toast('Profil enregistré');
+  } else {
+    const np = Core.BallisticProfile(o);
+    App.state.profiles.push(np);
+    App.state.activeProfileId = np.id; S().clicksV = S().clicksH = 0;
+    toast('Profil créé et activé');
+  }
+  dlg.close(); fillForm(); recompute();
+});
+
+/* ---------------- RENDU GLOBAL ---------------- */
+const RENDER = { calc: renderCalc, reticle: renderReticle, calib: renderCalib, profiles: renderProfiles };
+function renderAll() {
+  $('#profName').textContent = P().name;
+  $('#bcFlag').hidden = !(P().useCalibrated && Number.isFinite(P().bcCalibrated));
+  (RENDER[S().tab] || renderCalc)();
+}
+
+/* ---------------- DEMARRAGE ---------------- */
+fillForm();
+App.solution = null;
+recompute();
+showTab(S().tab in { calc: 1, reticle: 1, calib: 1, profiles: 1 } ? S().tab : 'calc');
+if (loaded.warning) toast(loaded.warning);
+
+/* ---------------- PWA ----------------
+   Le service worker est un fichier separe (sw.js) : un navigateur n'accepte pas un SW inline.
+   En file:// il est indisponible ; l'app fonctionne alors mais sans installation ni cache. */
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+})();
+</script>
+</body>
+</html>
